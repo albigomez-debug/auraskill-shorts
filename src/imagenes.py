@@ -87,3 +87,22 @@ def material_escena(escena, carpeta, n, usados):
     ruta_c = os.path.join(carpeta, f"fondo{n}.png")
     fondo_color(ruta_c)
     return ruta_c, "imagen"
+
+
+def materiales_escena(escena, carpeta, n, usados, cuantos):
+    """Hasta 'cuantos' clips distintos de Pexels; si no hay, una imagen (que se reencuadra en cada corte)."""
+    res = []
+    if os.environ.get("PEXELS_API_KEY"):
+        for c in range(cuantos):
+            ruta = os.path.join(carpeta, f"clip{n}_{c}.mp4")
+            try:
+                if video_pexels(escena["busqueda"], ruta, usados):
+                    res.append((ruta, "video"))
+                else:
+                    break
+            except Exception as e:
+                print(f"Pexels falló en la escena {n}: {e}")
+                break
+    if res:
+        return res
+    return [material_escena(escena, carpeta, n, usados)]

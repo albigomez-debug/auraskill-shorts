@@ -10,19 +10,40 @@ def ff(*args):
     subprocess.run(["ffmpeg", "-y", "-v", "error", *args], check=True)
 
 
-def segmento(material, tipo, dur, ruta):
-    frames = int(dur * FPS) + 1
+MOVIMIENTOS = ["zoom_in", "pan_arriba", "zoom_out", "pan_izq", "zoom_in_lado", "pan_abajo", "pan_der"]
+
+
+def segmento(material, tipo, dur, ruta, mov="zoom_in", desfase=0.0):
+    """Un plano de 'dur' segundos. Vídeo: recorte vertical. Imagen: movimiento de cámara suave."""
+    enc = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", "-an"]
     if tipo == "video":
-        ff("-stream_loop", "-1", "-i", material, "-t", f"{dur:.3f}", "-an",
+        ff("-ss", f"{desfase:.2f}", "-stream_loop", "-1", "-i", material, "-t", f"{dur:.3f}",
            "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1",
-           "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", ruta)
+           *enc, ruta)
+        return
+    d = max(dur, 0.1)
+    z = 0.14  # cuánto zoom (14 %)
+    base = f"scale={int(W * 1.2)}:{int(H * 1.2)}:force_original_aspect_ratio=increase"
+    if mov in ("zoom_in", "zoom_out", "zoom_in_lado"):
+        f = f"(1+{z}*t/{d})" if mov != "zoom_out" else f"(1+{z}-{z}*t/{d})"
+        cx = "(iw-ow)/2" if mov != "zoom_in_lado" else "(iw-ow)*0.3"
+        vf = (f"{base},crop={int(W * 1.2)}:{int(H * 1.2)},"
+              f"scale=w='trunc({W}*{f}/2)*2':h='trunc({H}*{f}/2)*2':eval=frame,"
+              f"crop={W}:{H}:x='{cx}':y='(ih-oh)/2'")
     else:
-        zoom = "min(zoom+0.0009,1.18)"
-        ff("-i", material, "-t", f"{dur:.3f}",
-           "-vf", (f"scale={W * 2}:{H * 2}:force_original_aspect_ratio=increase,crop={W * 2}:{H * 2},"
-                   f"zoompan=z='{zoom}':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'"
-                   f":s={W}x{H}:fps={FPS},setsar=1"),
-           "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p", ruta)
+        p = f"(t/{d})"
+        x, y = "(iw-ow)/2", "(ih-oh)/2"
+        if mov == "pan_izq":
+            x = f"(iw-ow)*(1-{p})"
+        elif mov == "pan_der":
+            x = f"(iw-ow)*{p}"
+        elif mov == "pan_arriba":
+            y = f"(ih-oh)*(1-{p})"
+        elif mov == "pan_abajo":
+            y = f"(ih-oh)*{p}"
+        vf = f"{base},crop={W}:{H}:x='{x}':y='{y}'"
+    ff("-loop", "1", "-framerate", str(FPS), "-i", material, "-t", f"{dur:.3f}",
+       "-vf", vf + f",fps={FPS},setsar=1", *enc, ruta)
 
 
 def _t(s):
@@ -66,32 +87,23 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         f.write(cab + "\n".join(lineas) + "\n")
 
 
-def montar(escenas, carpeta, salida):
-    """escenas: lista de dicts con audio, dur, material, tipo, palabras (tiempos relativos)."""
-    segs, audios, palabras, t = [], [], [], 0.0
-    for n, e in enumerate(escenas):
-        seg = os.path.join(carpeta, f"seg{n}.mp4")
-        segmento(e["material"], e["tipo"], e["dur"], seg)
+def montar(planos, audio_voz, palabras, carpeta, salida):
+    """planos: lista de dicts con material, tipo, dur, mov, desfase. La voz va en un solo archivo."""
+    segs = []
+    for n, p in enumerate(planos):
+        seg = os.path.join(carpeta, f"seg{n:02d}.mp4")
+        segmento(p["material"], p["tipo"], p["dur"], seg, p.get("mov", "zoom_in"), p.get("desfase", 0))
         segs.append(seg)
-        audios.append(e["audio"])
-        palabras += [{**p, "ini": p["ini"] + t, "fin": p["fin"] + t} for p in e["palabras"]]
-        t += e["dur"]
 
     lista_v = os.path.join(carpeta, "videos.txt")
     with open(lista_v, "w") as f:
         f.writelines(f"file '{os.path.abspath(s)}'\n" for s in segs)
-    lista_a = os.path.join(carpeta, "audios.txt")
-    with open(lista_a, "w") as f:
-        f.writelines(f"file '{os.path.abspath(a)}'\n" for a in audios)
-
     video = os.path.join(carpeta, "video_sin_audio.mp4")
     ff("-f", "concat", "-safe", "0", "-i", lista_v, "-c", "copy", video)
-    audio = os.path.join(carpeta, "voz.m4a")
-    ff("-f", "concat", "-safe", "0", "-i", lista_a, "-c:a", "aac", "-b:a", "192k", audio)
 
     ass = os.path.join(carpeta, "subs.ass")
     subtitulos(palabras, ass)
-    ff("-i", video, "-i", audio, "-vf", f"ass={ass}",
+    ff("-i", video, "-i", audio_voz, "-vf", f"ass={ass}",
        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
-       "-c:a", "copy", "-shortest", "-movflags", "+faststart", salida)
-    return t
+       "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", salida)
+    return sum(p["dur"] for p in planos)

@@ -12,9 +12,9 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
 from guion import escribir_guion, validar  # noqa: E402
-from imagenes import material_escena  # noqa: E402
-from montaje import montar  # noqa: E402
-from voz import narrar_escena  # noqa: E402
+from imagenes import materiales_escena  # noqa: E402
+from montaje import MOVIMIENTOS, montar  # noqa: E402
+from voz import narrar_todo  # noqa: E402
 
 
 def main():
@@ -39,17 +39,27 @@ def main():
     with open(os.path.join(carpeta, "guion.json"), "w", encoding="utf-8") as f:
         json.dump(guion, f, ensure_ascii=False, indent=2)
 
-    usados, escenas = set(), []
+    textos = [e["texto"] for e in guion["escenas"]]
+    audio = os.path.join(carpeta, "voz.mp3")
+    dur_total, palabras, inicios = narrar_todo(textos, config, audio)
+    print(f"Voz lista ({dur_total:.1f}s)")
+
+    usados, planos, k = set(), [], 0
     for n, e in enumerate(guion["escenas"]):
-        audio = os.path.join(carpeta, f"voz{n}.mp3")
-        dur, palabras = narrar_escena(e["texto"], config, audio)
-        material, tipo = material_escena(e, carpeta, n, usados)
-        escenas.append({"audio": audio, "dur": dur, "palabras": palabras,
-                        "material": material, "tipo": tipo})
-        print(f"Escena {n + 1}/{len(guion['escenas'])} lista ({dur:.1f}s, {tipo})")
+        fin = inicios[n + 1] if n + 1 < len(inicios) else dur_total + 0.2
+        dur = max(fin - inicios[n], 0.5)
+        cortes = max(1, round(dur / config.get("segundos_por_corte", 2.6)))
+        materiales = materiales_escena(e, carpeta, n, usados, cortes)
+        for c in range(cortes):
+            material, tipo = materiales[c % len(materiales)]
+            planos.append({"material": material, "tipo": tipo, "dur": dur / cortes,
+                           "mov": MOVIMIENTOS[k % len(MOVIMIENTOS)],
+                           "desfase": 0 if c < len(materiales) else 2.0 * c})
+            k += 1
+        print(f"Escena {n + 1}/{len(textos)} lista ({dur:.1f}s, {cortes} cortes, {len(materiales)} fuentes)")
 
     salida = os.path.join("salida", "short.mp4")
-    total = montar(escenas, carpeta, salida)
+    total = montar(planos, audio, palabras, carpeta, salida)
     print(f"Vídeo listo: {salida} ({total:.1f}s)")
     if total > 180:
         raise RuntimeError("El vídeo pasa de 3 minutos; YouTube no lo trataría como short")

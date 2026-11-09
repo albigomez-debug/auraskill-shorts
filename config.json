@@ -1,7 +1,8 @@
 {
   "idioma": "español",
   "voz": "es-ES-AlvaroNeural",
-  "velocidad_voz": "+8%",
+  "velocidad_voz": "+12%",
+  "segundos_por_corte": 2.6,
   "privacidad": "public",
   "categoria_youtube": "27",
   "modelos_gemini": ["gemini-3.8-flash", "gemini-flash-latest"],

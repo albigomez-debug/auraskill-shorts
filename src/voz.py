@@ -48,3 +48,24 @@ def narrar_escena(texto, config, ruta):
         palabras = [{"texto": p, "ini": i * paso, "fin": (i + 1) * paso}
                     for i, p in enumerate(trozos)]
     return dur, palabras
+
+
+def narrar_todo(textos, config, ruta):
+    """Una sola locución para todo el short (sin pausas raras entre escenas).
+
+    Devuelve (duración, palabras con tiempos, inicio de cada escena en segundos).
+    """
+    total_txt = " ".join(t.strip() for t in textos)
+    dur, palabras = narrar_escena(total_txt, config, ruta)
+    cuentas = [len(t.split()) for t in textos]
+    n = len(palabras)
+    total = sum(cuentas) or 1
+    inicios, acum = [], 0
+    for c in cuentas:
+        # índice de la primera palabra de la escena (proporcional si los recuentos no cuadran)
+        i = acum if n == total else round(acum / total * n)
+        i = min(i, n - 1) if n else 0
+        inicios.append(palabras[i]["ini"] if n else dur * acum / total)
+        acum += c
+    inicios[0] = 0.0
+    return dur, palabras, inicios
