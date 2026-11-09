@@ -1,0 +1,44 @@
+name: Subir short animado a YouTube
+
+on:
+  workflow_dispatch:
+    inputs:
+      proyecto:
+        description: "Carpeta del proyecto dentro de animados/ (usa render/final.mp4 y youtube.json)"
+        default: "melaza-remotion"
+
+permissions:
+  contents: write
+
+jobs:
+  subir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -r requirements.txt
+      - name: Subir
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          P=animados/${{ inputs.proyecto }}
+          python - <<EOF
+          import json, sys
+          sys.path.insert(0, "src")
+          from subir import subir
+          meta = json.load(open("$P/youtube.json", encoding="utf-8"))
+          config = json.load(open("config.json", encoding="utf-8"))
+          vid = subir("$P/render/final.mp4", meta, config)
+          open("$P/render/youtube.txt", "w").write(f"https://youtube.com/shorts/{vid}\n")
+          EOF
+      - name: Apuntar el enlace
+        run: |
+          git config user.name "auraskill-bot"
+          git config user.email "auraskill-bot@users.noreply.github.com"
+          git add -A animados/${{ inputs.proyecto }}/render/youtube.txt
+          git commit -m "Short animado subido" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
