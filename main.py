@@ -11,7 +11,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
-from guion import escribir_guion  # noqa: E402
+from guion import escribir_guion, validar  # noqa: E402
 from imagenes import material_escena  # noqa: E402
 from montaje import montar  # noqa: E402
 from voz import narrar_escena  # noqa: E402
@@ -28,7 +28,14 @@ def main():
     carpeta = os.path.join("salida", sello)
     os.makedirs(carpeta, exist_ok=True)
 
-    guion = escribir_guion(config, historial)
+    manual = "guion_manual.json"
+    if os.path.exists(manual):  # guion escrito a mano: se usa una vez y se archiva
+        with open(manual, encoding="utf-8") as f:
+            guion = json.load(f)
+        validar(guion)
+        print(f"Usando guion manual: {guion['titulo']}")
+    else:
+        guion = escribir_guion(config, historial)
     with open(os.path.join(carpeta, "guion.json"), "w", encoding="utf-8") as f:
         json.dump(guion, f, ensure_ascii=False, indent=2)
 
@@ -51,6 +58,9 @@ def main():
     if not sin_subir:
         entrada["youtube_id"] = subir_video(salida, guion, config)
     historial.append(entrada)
+    if os.path.exists(manual):
+        os.makedirs("guiones_usados", exist_ok=True)
+        os.replace(manual, os.path.join("guiones_usados", f"{sello}.json"))
     with open("historial.json", "w", encoding="utf-8") as f:
         json.dump(historial, f, ensure_ascii=False, indent=2)
 
