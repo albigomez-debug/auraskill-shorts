@@ -1,6 +1,7 @@
 """Escribe el guion del short con la API de Gemini (nivel gratuito)."""
 import json
 import os
+import re
 import time
 
 from google import genai
@@ -42,7 +43,7 @@ def escribir_guion(config, historial):
         usados=usados,
     )
     ultimo_error = None
-    for modelo in config["modelos_gemini"]:
+    for modelo in lista_modelos(cliente, config["modelos_gemini"]):
         for intento in range(3):
             try:
                 r = cliente.models.generate_content(
@@ -60,9 +61,33 @@ def escribir_guion(config, historial):
                 return datos
             except Exception as e:  # probamos otra vez u otro modelo
                 ultimo_error = e
-                print(f"Fallo con {modelo} (intento {intento + 1}): {e}")
+                print(f"Fallo con {modelo} (intento {intento + 1}): {str(e)[:300]}")
+                if "NOT_FOUND" in str(e) or "404" in str(e):
+                    break  # ese modelo ya no existe: pasamos al siguiente
                 time.sleep(5 * (intento + 1))
     raise RuntimeError(f"Gemini no pudo escribir el guion: {ultimo_error}")
+
+
+def lista_modelos(cliente, preferidos):
+    """Los modelos de config primero; luego los 'flash' que Google tenga ahora, del más nuevo al más viejo."""
+    modelos = list(preferidos)
+    try:
+        hay = []
+        for m in cliente.models.list():
+            nombre = m.name.replace("models/", "")
+            acciones = getattr(m, "supported_actions", None) or []
+            if "flash" in nombre and "generateContent" in acciones and not re.search(
+                    r"image|tts|audio|live|embed|thinking|exp", nombre):
+                hay.append(nombre)
+        clave = lambda n: [int(x) if x.isdigit() else 0 for x in re.findall(r"\d+", n)]
+        modelos += sorted(hay, key=clave, reverse=True)
+    except Exception as e:
+        print(f"No pude listar modelos: {e}")
+    vistos = []
+    for m in modelos:
+        if m not in vistos:
+            vistos.append(m)
+    return vistos
 
 
 def validar(d):
