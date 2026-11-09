@@ -1,0 +1,125 @@
+name: Render short animado
+
+# Renderiza el short animado (Remotion + three.js) en trozos en paralelo, lo junta con el sonido,
+# lo guarda en el repo para revisarlo y, si se pide, lo sube a YouTube.
+on:
+  workflow_dispatch:
+    inputs:
+      proyecto:
+        description: "Carpeta del proyecto dentro de animados/"
+        default: "melaza-remotion"
+      composicion:
+        description: "Composición de Remotion"
+        default: "Melaza"
+      trozos:
+        description: "Cuántos trozos en paralelo (máx. 20)"
+        default: "18"
+      subir:
+        description: "¿Subir a YouTube al terminar?"
+        type: choice
+        options: ["no", "si"]
+        default: "no"
+
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      lista: ${{ steps.p.outputs.lista }}
+    steps:
+      - id: p
+        run: python3 -c "import json;n=int('${{ inputs.trozos }}');print('lista='+json.dumps(list(range(n))))" >> "$GITHUB_OUTPUT"
+
+  trozo:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        i: ${{ fromJson(needs.plan.outputs.lista) }}
+    defaults:
+      run:
+        working-directory: animados/${{ inputs.proyecto }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: animados/${{ inputs.proyecto }}/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx remotion browser ensure
+      - name: Renderizar trozo ${{ matrix.i }}
+        run: |
+          TOTAL=$(grep -ohP 'export const TOTAL = \K[0-9]+' src/videos/*/story.ts | head -1)
+          N=${{ inputs.trozos }}; I=${{ matrix.i }}
+          A=$(( TOTAL * I / N )); B=$(( TOTAL * (I + 1) / N - 1 ))
+          echo "Trozo $I: cuadros $A-$B de $TOTAL"
+          mkdir -p out
+          npx remotion render src/index.ts ${{ inputs.composicion }} out/trozo_$(printf %02d $I).mp4 \
+            --frames=$A-$B --codec h264 --crf 15 --gl=swangle --concurrency=2 \
+            --props='{"mute":true}' --timeout=240000 --log=info
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trozo-${{ matrix.i }}
+          path: animados/${{ inputs.proyecto }}/out/trozo_*.mp4
+          retention-days: 3
+
+  juntar:
+    needs: trozo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -q numpy scipy pillow -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: trozo-*
+          path: trozos
+          merge-multiple: true
+      - name: Juntar imagen + sonido
+        run: |
+          P=animados/${{ inputs.proyecto }}
+          (cd $P && python sonido.py)
+          ls trozos/*.mp4 | sort | sed "s/^/file '$PWD\//; s/$/'/" > lista.txt
+          ffmpeg -hide_banner -y -f concat -safe 0 -i lista.txt -c copy video.mp4
+          ffmpeg -hide_banner -y -i video.mp4 -i $P/public/voz/mezcla.wav -map 0:v:0 -map 1:a:0 \
+            -af loudnorm=I=-14:TP=-1.5:LRA=11 -c:v copy -c:a aac -b:a 192k -ar 48000 -shortest final.mp4
+          ffprobe -v error -show_entries stream=codec_type,width,height,nb_frames,duration -of compact final.mp4
+          ffmpeg -hide_banner -i final.mp4 -af ebur128 -f null - 2>&1 | grep -A3 "Integrated loudness" || true
+          mkdir -p $P/render
+          cp final.mp4 $P/render/final.mp4
+          # hoja de revisión: un cuadro cada segundo
+          ffmpeg -hide_banner -y -i final.mp4 -vf "fps=1,scale=216:384,tile=8x4" -frames:v 1 $P/render/hoja.jpg
+      - name: Subir a YouTube
+        if: inputs.subir == 'si'
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          P=animados/${{ inputs.proyecto }}
+          python - <<EOF
+          import json, sys
+          sys.path.insert(0, "src")
+          from subir import subir
+          meta = json.load(open("$P/youtube.json", encoding="utf-8"))
+          config = json.load(open("config.json", encoding="utf-8"))
+          vid = subir("final.mp4", meta, config)
+          open("$P/render/youtube.txt", "w").write(f"https://youtube.com/shorts/{vid}\n")
+          EOF
+      - name: Guardar en el repo
+        run: |
+          git config user.name "auraskill-bot"
+          git config user.email "auraskill-bot@users.noreply.github.com"
+          git add -A animados/${{ inputs.proyecto }}/render
+          git diff --cached --quiet && exit 0
+          git commit -m "Render del short animado"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
