@@ -50,10 +50,14 @@ def video_pexels(busqueda, ruta, usados):
     return False
 
 
-def imagen_ia(prompt, ruta):
-    texto = prompt + ", vertical 9:16, cinematic, highly detailed, dramatic lighting, no text"
+def imagen_ia(prompt, ruta, estilo="", protagonista="", semilla=None):
+    """Imagen IA. Mismo estilo, protagonista y semilla en todo el short para que parezca una sola historia."""
+    partes = [estilo, protagonista, "Shot: " + prompt,
+              "vertical 9:16 frame, consistent character, highly detailed, no text, no letters"]
+    texto = ". ".join(p for p in partes if p)[:1500]
+    semilla = semilla or random.randint(1, 10**6)
     url = ("https://image.pollinations.ai/prompt/" + urllib.parse.quote(texto)
-           + f"?width=1080&height=1920&nologo=true&seed={random.randint(1, 10**6)}")
+           + f"?width=1080&height=1920&nologo=true&model=flux&seed={semilla}")
     cab = {}
     if os.environ.get("POLLINATIONS_TOKEN"):
         cab["Authorization"] = "Bearer " + os.environ["POLLINATIONS_TOKEN"]
@@ -82,7 +86,8 @@ def material_escena(escena, carpeta, n, usados):
     except Exception as e:
         print(f"Pexels falló en la escena {n}: {e}")
     ruta_i = os.path.join(carpeta, f"img{n}.jpg")
-    if imagen_ia(escena["imagen"], ruta_i):
+    if imagen_ia(escena["imagen"], ruta_i, escena.get("_estilo", ""),
+                 escena.get("_protagonista", ""), escena.get("_semilla")):
         return ruta_i, "imagen"
     ruta_c = os.path.join(carpeta, f"fondo{n}.png")
     fondo_color(ruta_c)

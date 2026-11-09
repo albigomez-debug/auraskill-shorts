@@ -7,6 +7,7 @@ Uso:
 import datetime
 import json
 import os
+import random
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
@@ -36,6 +37,7 @@ def main():
         print(f"Usando guion manual: {guion['titulo']}")
     else:
         guion = escribir_guion(config, historial)
+    validar(guion)
     with open(os.path.join(carpeta, "guion.json"), "w", encoding="utf-8") as f:
         json.dump(guion, f, ensure_ascii=False, indent=2)
 
@@ -45,7 +47,10 @@ def main():
     print(f"Voz lista ({dur_total:.1f}s)")
 
     usados, planos, k = set(), [], 0
+    semilla = random.randint(1, 10**6)
     for n, e in enumerate(guion["escenas"]):
+        e["_estilo"], e["_protagonista"] = guion["estilo_visual"], guion["protagonista"]
+        e["_semilla"] = semilla
         fin = inicios[n + 1] if n + 1 < len(inicios) else dur_total + 0.2
         dur = max(fin - inicios[n], 0.5)
         cortes = max(1, round(dur / config.get("segundos_por_corte", 2.6)))
@@ -54,7 +59,8 @@ def main():
             material, tipo = materiales[c % len(materiales)]
             planos.append({"material": material, "tipo": tipo, "dur": dur / cortes,
                            "mov": MOVIMIENTOS[k % len(MOVIMIENTOS)],
-                           "desfase": 0 if c < len(materiales) else 2.0 * c})
+                           "desfase": 0 if c < len(materiales) else 2.0 * c,
+                           "nueva_escena": c == 0})
             k += 1
         print(f"Escena {n + 1}/{len(textos)} lista ({dur:.1f}s, {cortes} cortes, {len(materiales)} fuentes)")
 

@@ -87,23 +87,30 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         f.write(cab + "\n".join(lineas) + "\n")
 
 
-def montar(planos, audio_voz, palabras, carpeta, salida):
-    """planos: lista de dicts con material, tipo, dur, mov, desfase. La voz va en un solo archivo."""
+def montar(planos, audio_voz, palabras, carpeta, salida, fundido=0.3):
+    """planos: lista de dicts con material, tipo, dur, mov, desfase. Une los planos con fundidos suaves."""
     segs = []
     for n, p in enumerate(planos):
         seg = os.path.join(carpeta, f"seg{n:02d}.mp4")
-        segmento(p["material"], p["tipo"], p["dur"], seg, p.get("mov", "zoom_in"), p.get("desfase", 0))
+        extra = fundido if n < len(planos) - 1 else 0  # cada plano dura un poco más para solaparse
+        segmento(p["material"], p["tipo"], p["dur"] + extra, seg, p.get("mov", "zoom_in"), p.get("desfase", 0))
         segs.append(seg)
-
-    lista_v = os.path.join(carpeta, "videos.txt")
-    with open(lista_v, "w") as f:
-        f.writelines(f"file '{os.path.abspath(s)}'\n" for s in segs)
-    video = os.path.join(carpeta, "video_sin_audio.mp4")
-    ff("-f", "concat", "-safe", "0", "-i", lista_v, "-c", "copy", video)
 
     ass = os.path.join(carpeta, "subs.ass")
     subtitulos(palabras, ass)
-    ff("-i", video, "-i", audio_voz, "-vf", f"ass={ass}",
+    entradas, cadena, previo = [], [], "0:v"
+    largo = planos[0]["dur"] + (fundido if len(planos) > 1 else 0)  # duración acumulada de lo ya unido
+    for s in segs:
+        entradas += ["-i", s]
+    for n in range(1, len(segs)):
+        tipo = "fade" if planos[n].get("nueva_escena") else "fadefast"
+        cadena.append(f"[{previo}][{n}:v]xfade=transition={tipo}:duration={fundido:.2f}:"
+                      f"offset={largo - fundido:.3f}[v{n}]")
+        largo += planos[n]["dur"] + (fundido if n < len(planos) - 1 else 0) - fundido
+        previo = f"v{n}"
+    filtro = ";".join(cadena + [f"[{previo}]ass={ass}[vout]"])
+    ff(*entradas, "-i", audio_voz, "-filter_complex", filtro,
+       "-map", "[vout]", "-map", f"{len(segs)}:a",
        "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
        "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", salida)
     return sum(p["dur"] for p in planos)

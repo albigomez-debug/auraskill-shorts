@@ -13,16 +13,22 @@ REGLAS TÉCNICAS (obligatorias, por encima de todo lo anterior):
 - La narración completa debe tener entre {pmin} y {pmax} palabras (unos 40-55 segundos).
 - Divide la narración en 5 a 8 escenas. Cada escena es una o dos frases cortas.
 - No repitas ninguno de estos temas ya publicados: {usados}
+- LAS IMÁGENES DEBEN CONTAR UNA HISTORIA CONTINUA, como planos seguidos de una misma película:
+  * Define un único "estilo_visual" y un único "protagonista" (personaje u objeto principal + escenario) y mantenlos en TODO el short.
+  * Cada "imagen" es el plano siguiente al anterior: mismo personaje, misma ropa, mismo lugar o una continuación lógica. Indica el tipo de plano (close-up, medium shot, wide shot, over-the-shoulder...) y qué hace el protagonista en ese momento, siguiendo lo que dice la voz.
+  * Nada de texto, letras ni logos en las imágenes.
 - Responde SOLO con un JSON con esta forma exacta:
 {{
   "tema": "tema en pocas palabras",
   "titulo": "título atractivo de máximo 80 caracteres, sin hashtags",
   "descripcion": "descripción de 1 a 3 frases para YouTube",
   "hashtags": ["#shorts", "#otro", "#otro"],
+  "estilo_visual": "English: one art style + color palette + lighting for the whole video (e.g. 'cinematic photorealistic, warm golden hour light, teal and orange grade, 35mm film grain')",
+  "protagonista": "English: detailed description of the recurring main character/object and the main setting (age, look, clothes, place)",
   "escenas": [
     {{
       "texto": "lo que dice la voz en esta escena",
-      "imagen": "detailed English prompt for a vertical cinematic image of this scene",
+      "imagen": "English: shot type + what the protagonist does in this exact moment, continuing the previous shot",
       "busqueda": "2-3 English keywords to search stock video for this scene"
     }}
   ]
@@ -101,6 +107,8 @@ def validar(d):
             raise ValueError("Escena sin texto")
         e.setdefault("imagen", d["tema"])
         e.setdefault("busqueda", d["tema"])
+    d.setdefault("estilo_visual", "cinematic photorealistic, dramatic warm lighting, rich colors, shallow depth of field")
+    d.setdefault("protagonista", "")
     d["titulo"] = d["titulo"].strip()[:90]
     tags = [t if t.startswith("#") else "#" + t for t in d["hashtags"]]
     if "#shorts" not in [t.lower() for t in tags]:
