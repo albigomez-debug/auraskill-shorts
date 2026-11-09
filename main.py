@@ -3,6 +3,7 @@
 Uso:
   python main.py            -> crea y sube
   python main.py --sin-subir -> solo crea el vídeo (para probar)
+  python main.py --guion guiones/x.json -> usa un guion ya escrito en vez de Gemini
 """
 import datetime
 import json
@@ -11,7 +12,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "src"))
 
-from guion import escribir_guion  # noqa: E402
+from guion import escribir_guion, validar  # noqa: E402
 from imagenes import material_escena  # noqa: E402
 from montaje import montar  # noqa: E402
 from voz import narrar_escena  # noqa: E402
@@ -28,7 +29,13 @@ def main():
     carpeta = os.path.join("salida", sello)
     os.makedirs(carpeta, exist_ok=True)
 
-    guion = escribir_guion(config, historial)
+    if "--guion" in sys.argv:
+        with open(sys.argv[sys.argv.index("--guion") + 1], encoding="utf-8") as f:
+            guion = json.load(f)
+        validar(guion)
+        print(f"Guion escrito a mano: {guion['titulo']}")
+    else:
+        guion = escribir_guion(config, historial)
     with open(os.path.join(carpeta, "guion.json"), "w", encoding="utf-8") as f:
         json.dump(guion, f, ensure_ascii=False, indent=2)
 
