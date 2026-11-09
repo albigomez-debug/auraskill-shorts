@@ -1,0 +1,10 @@
+{
+  "idioma": "español",
+  "voz": "es-ES-AlvaroNeural",
+  "velocidad_voz": "+8%",
+  "privacidad": "public",
+  "categoria_youtube": "27",
+  "modelos_gemini": ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash"],
+  "palabras_min": 100,
+  "palabras_max": 150
+}

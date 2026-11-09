@@ -1,0 +1,77 @@
+name: Crear y subir short
+
+on:
+  schedule:
+    # Horas en UTC. En invierno España = UTC+1 -> 9:00, 12:00, 15:00, 18:00 y 21:00
+    - cron: "0 8 * * *"
+    - cron: "0 11 * * *"
+    - cron: "0 14 * * *"
+    - cron: "0 17 * * *"
+    - cron: "0 20 * * *"
+  workflow_dispatch:
+    inputs:
+      subir:
+        description: "¿Subir a YouTube? (no = solo crear el vídeo para revisarlo)"
+        type: choice
+        options: ["si", "no"]
+        default: "si"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shorts
+  cancel-in-progress: false
+
+jobs:
+  short:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar programas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg fonts-dejavu-core
+          pip install -r requirements.txt
+
+      - name: Crear el short (y subirlo)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          POLLINATIONS_TOKEN: ${{ secrets.POLLINATIONS_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.subir }}" = "no" ]; then
+            python main.py --sin-subir
+          else
+            python main.py
+          fi
+
+      - name: Guardar el vídeo para descargarlo (TikTok)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-${{ github.run_number }}
+          path: |
+            salida/short.mp4
+            salida/*/guion.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Apuntar el tema en el historial
+        run: |
+          git config user.name "auraskill-bot"
+          git config user.email "auraskill-bot@users.noreply.github.com"
+          git add historial.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Historial: nuevo short"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
