@@ -75,7 +75,7 @@ jobs:
         run: |
           git config user.name "auraskill-bot"
           git config user.email "auraskill-bot@users.noreply.github.com"
-          git add historial.json
+          git add -A historial.json guiones_usados guion_manual.json 2>/dev/null || git add -A
           git diff --cached --quiet && exit 0
           git commit -m "Historial: nuevo short"
           for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done

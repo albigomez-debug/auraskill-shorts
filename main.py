@@ -29,11 +29,18 @@ def main():
     carpeta = os.path.join("salida", sello)
     os.makedirs(carpeta, exist_ok=True)
 
-    if "--guion" in sys.argv:
+    manual = "guion_manual.json"
+    if "--guion" in sys.argv:  # guion indicado al lanzar el workflow a mano
         with open(sys.argv[sys.argv.index("--guion") + 1], encoding="utf-8") as f:
             guion = json.load(f)
         validar(guion)
         print(f"Guion escrito a mano: {guion['titulo']}")
+        manual = None  # no tocar guion_manual.json en esta ejecución
+    elif os.path.exists(manual):  # guion escrito a mano: se usa una vez y se archiva
+        with open(manual, encoding="utf-8") as f:
+            guion = json.load(f)
+        validar(guion)
+        print(f"Usando guion manual: {guion['titulo']}")
     else:
         guion = escribir_guion(config, historial)
     with open(os.path.join(carpeta, "guion.json"), "w", encoding="utf-8") as f:
@@ -58,6 +65,9 @@ def main():
     if not sin_subir:
         entrada["youtube_id"] = subir_video(salida, guion, config)
     historial.append(entrada)
+    if manual and os.path.exists(manual):
+        os.makedirs("guiones_usados", exist_ok=True)
+        os.replace(manual, os.path.join("guiones_usados", f"{sello}.json"))
     with open("historial.json", "w", encoding="utf-8") as f:
         json.dump(historial, f, ensure_ascii=False, indent=2)
 
