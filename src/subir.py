@@ -22,6 +22,7 @@ def youtube():
 
 def subir(ruta, guion, config):
     hashtags = " ".join(guion["hashtags"])
+    # "publicar": hora ISO (UTC) para que YouTube lo publique solo a esa hora
     titulo = guion["titulo"]
     if "#shorts" not in titulo.lower() and len(titulo) <= 90:
         titulo = f"{titulo} #Shorts"
@@ -35,11 +36,13 @@ def subir(ruta, guion, config):
             "defaultAudioLanguage": "es",
         },
         "status": {
-            "privacyStatus": config["privacidad"],
+            "privacyStatus": "private" if guion.get("publicar") else config["privacidad"],
             "selfDeclaredMadeForKids": False,
             "containsSyntheticMedia": True,
         },
     }
+    if guion.get("publicar"):
+        cuerpo["status"]["publishAt"] = guion["publicar"]
     peticion = youtube().videos().insert(
         part="snippet,status", body=cuerpo,
         media_body=MediaFileUpload(ruta, mimetype="video/mp4", chunksize=8 << 20, resumable=True),
