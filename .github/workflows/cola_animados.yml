@@ -1,0 +1,56 @@
+name: Publicar un short animado de la cola
+
+# Un short animado al día, para no pasar la cuota diaria de YouTube (los 5 automáticos + 1).
+# Coge el primero de animados/cola.txt que ya tenga render/final.mp4 y aún no tenga youtube.txt,
+# lo sube como privado y lo programa para las 13:00 UTC (14:00 en España) de ese día.
+on:
+  schedule:
+    - cron: "30 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  subir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q -r requirements.txt
+      - name: Subir el siguiente
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+        run: |
+          python - <<'EOF2'
+          import json, os, sys, datetime
+          sys.path.insert(0, "src")
+          from subir import subir
+          for p in open("animados/cola.txt").read().split():
+              d = f"animados/{p}"
+              if os.path.exists(f"{d}/render/final.mp4") and not os.path.exists(f"{d}/render/youtube.txt"):
+                  break
+          else:
+              print("Nada pendiente"); sys.exit(0)
+          now = datetime.datetime.now(datetime.timezone.utc)
+          when = now.replace(hour=13, minute=0, second=0, microsecond=0)
+          if when < now + datetime.timedelta(minutes=30): when += datetime.timedelta(days=1)
+          meta = json.load(open(f"{d}/youtube.json", encoding="utf-8"))
+          meta["publicar"] = when.strftime("%Y-%m-%dT%H:%M:%SZ")
+          config = json.load(open("config.json", encoding="utf-8"))
+          vid = subir(f"{d}/render/final.mp4", meta, config)
+          open(f"{d}/render/youtube.txt", "w").write(f"https://youtube.com/shorts/{vid}\nprogramado: {meta['publicar']}\n")
+          print(p, vid, meta["publicar"])
+          EOF2
+      - name: Guardar en el repo
+        run: |
+          git config user.name "auraskill-bot"
+          git config user.email "auraskill-bot@users.noreply.github.com"
+          git add -A animados
+          git diff --cached --quiet && exit 0
+          git commit -m "Short animado programado"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
