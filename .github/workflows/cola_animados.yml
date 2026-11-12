@@ -6,6 +6,7 @@ name: Publicar un short animado de la cola
 on:
   schedule:
     - cron: "30 7 * * *"
+    - cron: "30 9 * * *"   # respaldo por si GitHub se salta el primero
   workflow_dispatch:
 
 permissions:
@@ -37,6 +38,10 @@ jobs:
           else:
               print("Nada pendiente"); sys.exit(0)
           now = datetime.datetime.now(datetime.timezone.utc)
+          hoy = now.strftime("%Y-%m-%d")
+          import glob
+          if any(f"programado: {hoy}" in open(f).read() for f in glob.glob("animados/*/render/youtube.txt")):
+              print("Hoy ya hay uno programado"); sys.exit(0)
           when = now.replace(hour=13, minute=0, second=0, microsecond=0)
           if when < now + datetime.timedelta(minutes=30): when += datetime.timedelta(days=1)
           meta = json.load(open(f"{d}/youtube.json", encoding="utf-8"))
