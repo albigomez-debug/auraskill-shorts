@@ -8,6 +8,13 @@ on:
     - cron: "30 7 * * *"
     - cron: "30 9 * * *"   # respaldo por si GitHub se salta el primero
   workflow_dispatch:
+    inputs:
+      proyecto:
+        description: "Opcional: carpeta concreta (p. ej. hans-remotion)"
+        default: ""
+      hora:
+        description: "Opcional: hora de publicación ISO UTC (p. ej. 2026-11-12T16:00:00Z)"
+        default: ""
 
 permissions:
   contents: write
@@ -26,12 +33,15 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          PROYECTO: ${{ inputs.proyecto }}
+          HORA: ${{ inputs.hora }}
         run: |
           python - <<'EOF2'
           import json, os, sys, datetime
           sys.path.insert(0, "src")
           from subir import subir
-          for p in open("animados/cola.txt").read().split():
+          forced = os.environ.get("PROYECTO") or ""
+          for p in ([forced] if forced else open("animados/cola.txt").read().split()):
               d = f"animados/{p}"
               if os.path.exists(f"{d}/render/final.mp4") and not os.path.exists(f"{d}/render/youtube.txt"):
                   break
@@ -40,12 +50,12 @@ jobs:
           now = datetime.datetime.now(datetime.timezone.utc)
           hoy = now.strftime("%Y-%m-%d")
           import glob
-          if any(f"programado: {hoy}" in open(f).read() for f in glob.glob("animados/*/render/youtube.txt")):
+          if not forced and any(f"programado: {hoy}" in open(f).read() for f in glob.glob("animados/*/render/youtube.txt")):
               print("Hoy ya hay uno programado"); sys.exit(0)
           when = now.replace(hour=13, minute=0, second=0, microsecond=0)
           if when < now + datetime.timedelta(minutes=30): when += datetime.timedelta(days=1)
           meta = json.load(open(f"{d}/youtube.json", encoding="utf-8"))
-          meta["publicar"] = when.strftime("%Y-%m-%dT%H:%M:%SZ")
+          meta["publicar"] = os.environ.get("HORA") or when.strftime("%Y-%m-%dT%H:%M:%SZ")
           config = json.load(open("config.json", encoding="utf-8"))
           vid = subir(f"{d}/render/final.mp4", meta, config)
           open(f"{d}/render/youtube.txt", "w").write(f"https://youtube.com/shorts/{vid}\nprogramado: {meta['publicar']}\n")
