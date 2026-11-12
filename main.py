@@ -3,6 +3,7 @@
 Uso:
   python main.py            -> crea y sube
   python main.py --sin-subir -> solo crea el vídeo (para probar)
+  python main.py --guion guiones/x.json -> usa un guion ya escrito en vez de Gemini
 """
 import datetime
 import json
@@ -30,7 +31,13 @@ def main():
     os.makedirs(carpeta, exist_ok=True)
 
     manual = "guion_manual.json"
-    if os.path.exists(manual):  # guion escrito a mano: se usa una vez y se archiva
+    if "--guion" in sys.argv:  # guion indicado al lanzar el workflow a mano
+        with open(sys.argv[sys.argv.index("--guion") + 1], encoding="utf-8") as f:
+            guion = json.load(f)
+        validar(guion)
+        print(f"Guion escrito a mano: {guion['titulo']}")
+        manual = None  # no tocar guion_manual.json en esta ejecución
+    elif os.path.exists(manual):  # guion escrito a mano: se usa una vez y se archiva
         with open(manual, encoding="utf-8") as f:
             guion = json.load(f)
         validar(guion)
@@ -74,7 +81,7 @@ def main():
     if not sin_subir:
         entrada["youtube_id"] = subir_video(salida, guion, config)
     historial.append(entrada)
-    if os.path.exists(manual):
+    if manual and os.path.exists(manual):
         os.makedirs("guiones_usados", exist_ok=True)
         os.replace(manual, os.path.join("guiones_usados", f"{sello}.json"))
     with open("historial.json", "w", encoding="utf-8") as f:
