@@ -83,7 +83,7 @@ export class World extends Base {
     // other farm chickens pecking around
     const flock = (n: number) => { for (let k = 0; k < n; k++) { const x = -3 + k * 1.3 + Math.sin(t * 0.6 + k) * 0.3, z = -2.4 - (k % 3) * 0.9; card(`hen${k % 3}|${Math.round(t * 4 + k) % 8}`, x, z, C, chickenDraw((Math.round(t * 4 + k) % 8) * 0.785, false, ["#fbf7ee", "#c8823a", "#8a5a3a"][k % 3]), k % 2 ? 1 : -1, 0); } };
     if (id === S.hook || id === S.life || id === S.end) {
-      const x = id === S.end ? -0.2 + (f - 1026) * 0.012 : id === S.hook ? -1.0 + f * 0.015 : -0.9 + (f - 756) * 0.017;
+      const x = id === S.end ? -0.1 + (f - 1026) * 0.01 : id === S.hook ? -0.5 + f * 0.012 : -0.6 + (f - 756) * 0.012;
       const peck = id === S.life && f > W.comer - 3 && f < W.comer + 25;
       mike(x, 0, peck ? 0 : t * 9, true, peck ? -0.03 : 0);
       if (id === S.life && f > W.cantar - 3 && f < W.pensar - 6) fx(`note|${Math.floor(f / 8) % 2}`, 256, 256, noteDraw, x + 0.25, 0.95 + ((f - W.cantar) % 20) * 0.01, 0.1, 0.22, 0.22);
@@ -136,8 +136,8 @@ export class World extends Base {
       const choke = f > W.atraganto - 3;
       mike(X - 0.9 + (choke ? 0.02 * Math.sin(f * 2.5) : 0), MOTEL[2] - 0.1, choke ? 0 : t * 3, true, 0.4, choke ? "wide" : "calm");
       if (f > W.olsen - 6) {
-        person("olsen", OLSEN, X + 0.5, 0, MOTEL[2] - 0.1, { mode: "stand", expr: "nervous", facing: -1, tilt: 6 * Math.sin(t * 5) }, 1);
-        fx("q", 256, 256, qDraw, X + 0.5, 2.2, MOTEL[2] + 0.1, 0.35, 0.35);
+        person("olsen", OLSEN, X + 0.15, 0, MOTEL[2] - 0.1, { mode: "stand", expr: "nervous", facing: -1, tilt: 6 * Math.sin(t * 5) }, 1);
+        fx("q", 256, 256, qDraw, X + 0.15, 2.2, MOTEL[2] + 0.1, 0.35, 0.35);
       }
       if (f > W.gotas2 - 4) { fx("drop", 256, 256, dropDraw, X + 1.3, 1.3, MOTEL[2] + 0.2, 0.35, 0.35); fx("x", 256, 256, xDraw, X + 1.3, 1.3, MOTEL[2] + 0.25, 0.35, 0.35); }
     }

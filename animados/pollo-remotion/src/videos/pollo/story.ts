@@ -13,8 +13,8 @@ export const S = { hook: 1, farm: 2, chop: 3, feed: 4, tour: 5, board: 6, life: 
 export const STUMP: V3 = [0, 0, 0], TENT: V3 = [80, 0, 0], MOTEL: V3 = [-80, 0, 0], BOARD: V3 = [3, 0, -2];
 export const SHOTS: ShotDef[] = [
   { id: 1, a: 0, b: 100, sunAz: 130, keys: [
-    { f: 0, pos: [-0.9, 0.55, 3.1], look: [-0.3, 0.4, 0], fov: 44 },
-    { f: 100, pos: [0.8, 0.5, 2.5], look: [0.9, 0.4, 0], fov: 40, glide: true },
+    { f: 0, pos: [-0.5, 0.55, 3.0], look: [-0.25, 0.4, 0], fov: 44 },
+    { f: 100, pos: [0.9, 0.5, 2.5], look: [0.85, 0.4, 0], fov: 40, glide: true },
   ] },
   { id: 2, a: 96, b: 218, sunAz: 120, keys: [
     { f: 96, pos: [3, 7, 22], look: [0, 1.5, -4], fov: 46 },
@@ -39,17 +39,17 @@ export const SHOTS: ShotDef[] = [
     { f: 760, pos: [3, 1.45, 1.4], look: [3, 1.4, -2], fov: 40, glide: true },
   ] },
   { id: 7, a: 756, b: 880, sunAz: 130, keys: [
-    { f: 756, pos: [-0.6, 0.55, 2.8], look: [-0.3, 0.4, 0], fov: 42 },
-    { f: 880, pos: [1.3, 0.55, 2.6], look: [1.2, 0.4, 0], fov: 42, glide: true },
+    { f: 756, pos: [-0.4, 0.55, 2.8], look: [-0.3, 0.4, 0], fov: 42 },
+    { f: 880, pos: [0.95, 0.55, 2.6], look: [0.95, 0.4, 0], fov: 42, glide: true },
   ] },
   { id: 8, a: 876, b: 1030, sunAz: 150, keys: [
     { f: 876, pos: [-80, 2.4, 9], look: [-80, 1.6, 0], fov: 46 },
-    { f: 960, pos: [-80, 1.2, 4.6], look: [-80.2, 0.8, 0], fov: 42, glide: true },
-    { f: 1030, pos: [-79.8, 0.9, 3.2], look: [-80, 0.6, 0], fov: 40, glide: true },
+    { f: 960, pos: [-80.4, 1.1, 3.4], look: [-80.6, 0.8, 0], fov: 42, glide: true },
+    { f: 1030, pos: [-79.9, 1.1, 3.4], look: [-80.1, 0.9, 0], fov: 42, glide: true },
   ] },
   { id: 9, a: 1026, b: TOTAL, sunAz: 130, keys: [
-    { f: 1026, pos: [0.4, 0.5, 2.6], look: [0.5, 0.4, 0], fov: 40 },
-    { f: TOTAL, pos: [-0.9, 0.55, 3.2], look: [-0.3, 0.4, 0], fov: 44, glide: true },
+    { f: 1026, pos: [0.0, 0.5, 2.6], look: [0.05, 0.4, 0], fov: 40 },
+    { f: TOTAL, pos: [0.8, 0.55, 3.2], look: [0.75, 0.4, 0], fov: 44, glide: true },
   ] },
 ];
 const K = kit(SHOTS, [{ f: 222, k: 0.06 }, { f: 961, k: 0.04 }]);
