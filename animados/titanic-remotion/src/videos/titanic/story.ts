@@ -1,62 +1,65 @@
-// "Operación Gatito Acústico" (CIA, años 60), 34 s. Words: gato 53 · espía 71 · sesenta 93 · Fría 117 · soviéticos 163 · ocurre 203 ·
-// sospeche 266 · gato 287 · operan 312 · Micrófono 326 · Antena 356 · Operación 394 · Pero 431 · gana 488 · distrae 505 · hambre 527 ·
-// pájaros 550 · misión 590 · embajada 628 · sueltan 660 · exagente 689 · cruza 716 · atropella 743 · taxi 758 · terminada 781 ·
-// informe 816 · práctico 900 · Vamos 916 · espía 1008
+// "El panadero del whisky" (Charles Joughin, RMS Titanic, 15 de abril de 1912), 39 s.
 import { kit, ShotDef, Mark, V3 } from "./kit";
 export { FPS, smooth, clamp01, XFADE } from "./kit";
 export type { V3 };
-export const TOTAL = 1026;
-export const W = { sesenta: 93, fria: 117, sovieticos: 163, ocurre: 203, quien: 216, sospeche: 266, gato: 287, operan: 312, micro: 326,
-  antena: 356, operacion: 394, pero: 431, gana: 488, distrae: 505, hambre: 527, pajaros: 550, mision: 590, embajada: 628, sueltan: 660,
-  exagente: 689, cruza: 716, atropella: 743, taxi: 758, terminada: 781, informe: 816, practico: 900, vamos: 916 };
-export const S = { hook: 1, cold: 2, idea: 3, surgery: 4, problem: 5, mission: 6, taxi: 7, report: 8, end: 9 };
-export const LAB: V3 = [60, 0, 0], EMB: V3 = [0, 0, -14];
-export const SHOTS: ShotDef[] = [
-  { id: 1, a: 0, b: 86, sunAz: 130, keys: [
-    { f: 0, pos: [60.2, 1.3, 3.0], look: [60, 1.05, 0], fov: 44 },
-    { f: 86, pos: [60.1, 1.2, 2.2], look: [60, 1.0, 0], fov: 40, glide: true },
-  ] },
-  { id: 2, a: 82, b: 180, sunAz: 120, keys: [
-    { f: 82, pos: [6, 9, 16], look: [0, 3, -12], fov: 48 },
-    { f: 180, pos: [2, 3, 6], look: [0, 3.5, -14], fov: 46, glide: true },
-  ] },
-  { id: 3, a: 176, b: 300, sunAz: 130, keys: [
-    { f: 176, pos: [60, 1.6, 5.0], look: [60, 1.4, 0], fov: 44 },
-    { f: 300, pos: [60.1, 1.3, 3.0], look: [60, 1.1, 0], fov: 42, glide: true },
-  ] },
-  { id: 4, a: 296, b: 430, sunAz: 130, keys: [
-    { f: 296, pos: [60.6, 1.5, 2.8], look: [60, 1.0, 0], fov: 42 },
-    { f: 360, pos: [59.6, 1.4, 2.4], look: [59.8, 1.0, 0], fov: 40, glide: true },
-    { f: 430, pos: [60.2, 1.3, 2.0], look: [60, 1.0, 0], fov: 38, glide: true },
-  ] },
-  { id: 5, a: 426, b: 568, sunAz: 120, keys: [
-    { f: 426, pos: [-1.6, 0.9, 5.6], look: [-1.5, 0.5, 2], fov: 44 },
-    { f: 568, pos: [1.2, 0.8, 5.2], look: [1.2, 0.5, 2], fov: 44, glide: true },
-  ] },
-  { id: 6, a: 564, b: 702, sunAz: 120, keys: [
-    { f: 564, pos: [1.2, 1.6, 6.5], look: [0, 1.5, -6], fov: 46 },
-    { f: 702, pos: [0.4, 1.0, 3.2], look: [0, 0.7, -4], fov: 44, glide: true },
-  ] },
-  { id: 7, a: 698, b: 812, sunAz: 120, keys: [
-    { f: 698, pos: [0.6, 1.0, 0.8], look: [0, 0.4, -4], fov: 44 },
-    { f: 812, pos: [0.3, 0.8, -1.6], look: [0, 0.2, -4.6], fov: 42, glide: true },
-  ] },
-  { id: 8, a: 808, b: 918, sunAz: 130, keys: [
-    { f: 808, pos: [61.2, 1.8, 1.6], look: [61.2, 1.0, -0.2], fov: 44 },
-    { f: 918, pos: [61.2, 1.5, 1.0], look: [61.2, 0.95, -0.2], fov: 40, glide: true },
-  ] },
-  { id: 9, a: 914, b: TOTAL, sunAz: 130, keys: [
-    { f: 914, pos: [60.1, 1.2, 2.2], look: [60, 1.0, 0], fov: 40 },
-    { f: TOTAL, pos: [60.2, 1.3, 3.0], look: [60, 1.05, 0], fov: 44, glide: true },
-  ] },
+export const TOTAL = 1178;
+export const W = { hunde: 21, whisky: 74, dijo: 103, charles: 123, panaderos: 160, abril: 197, barco: 249, choca: 257, iceberg: 272,
+  charles2: 296, baja: 312, camarote: 323, trago: 354, luego: 372, tumbonas: 408, borda: 425, gente: 450, otro: 500, traguito: 507,
+  barco2: 533, levanta: 543, trepa: 573, popa: 589, alta: 619, agarra: 638, cuando: 676, hunde2: 694, baja2: 712, ascensor: 744,
+  dijo2: 766, pelo: 801, horas: 817, helada: 836, flotando: 870, amanecer: 896, bote: 928, ojo: 961, ciencia: 979, alcohol: 1002,
+  enfria: 1010, pero: 1046, explico: 1064, asi: 1096 };
+export const S = { hook: 1, galley: 2, berg: 3, cabin: 4, deck: 5, rise: 6, sink: 7, water: 8, science: 9, end: 10 };
+export const SEA: V3 = [0, 0, 0], SHIPZ = -70, GALLEY: V3 = [-80, 0, 0], DECK: V3 = [80, 0, 0];
+const water1 = (a: number, b: number) => [
+  { f: a, pos: [0.15, 0.55, 2.4] as V3, look: [0, 0.4, 0] as V3, fov: 44 },
+  { f: b, pos: [0.4, 0.75, 3.4] as V3, look: [0.1, 0.9, -10] as V3, fov: 46, glide: true },
 ];
-const K = kit(SHOTS, [{ f: 287, k: 0.04 }, { f: 743, k: 0.08 }]);
+export const SHOTS: ShotDef[] = [
+  { id: 1, a: 0, b: 118, sunAz: 140, keys: water1(0, 118) },
+  { id: 2, a: 114, b: 245, sunAz: 130, keys: [
+    { f: 114, pos: [-80, 1.5, 4.4], look: [-80, 1.3, 0], fov: 44 },
+    { f: 245, pos: [-79.6, 1.4, 3.2], look: [-79.8, 1.2, 0], fov: 42, glide: true },
+  ] },
+  { id: 3, a: 241, b: 292, sunAz: 140, keys: [
+    { f: 241, pos: [30, 8, 10], look: [0, 6, SHIPZ], fov: 46 },
+    { f: 292, pos: [24, 7, 4], look: [0, 6, SHIPZ], fov: 44, glide: true },
+  ] },
+  { id: 4, a: 288, b: 372, sunAz: 130, keys: [
+    { f: 288, pos: [-73.6, 1.2, 3.4], look: [-74, 0.9, 0], fov: 44 },
+    { f: 372, pos: [-73.8, 1.1, 2.5], look: [-74, 0.9, 0], fov: 42, glide: true },
+  ] },
+  { id: 5, a: 368, b: 528, sunAz: 130, keys: [
+    { f: 368, pos: [81.5, 1.7, 5.0], look: [80.4, 1.3, 0], fov: 46 },
+    { f: 528, pos: [80.8, 1.5, 3.6], look: [80.2, 1.3, 0], fov: 44, glide: true },
+  ] },
+  { id: 6, a: 524, b: 672, sunAz: 140, keys: [
+    { f: 524, pos: [10, 6, 40], look: [8, 10, SHIPZ], fov: 46 },
+    { f: 672, pos: [14, 5, 25], look: [14, 16, SHIPZ], fov: 44, glide: true },
+  ] },
+  { id: 7, a: 668, b: 764, sunAz: 140, keys: [
+    { f: 668, pos: [14, 5, 25], look: [14, 16, SHIPZ], fov: 44 },
+    { f: 764, pos: [14, 3, 22], look: [14, 6, SHIPZ], fov: 44, glide: true },
+  ] },
+  { id: 8, a: 760, b: 955, sunAz: 140, keys: [
+    { f: 760, pos: [0.1, 0.6, 2.2], look: [0, 0.45, 0], fov: 42 },
+    { f: 880, pos: [0.5, 0.9, 3.4], look: [0.2, 0.5, 0], fov: 44, glide: true },
+    { f: 955, pos: [1.2, 1.2, 5.0], look: [0.6, 0.6, 0], fov: 46, glide: true },
+  ] },
+  { id: 9, a: 951, b: 1094, sunAz: 130, keys: [
+    { f: 951, pos: [-81.2, 1.8, 4.8], look: [-81.25, 1.75, -1], fov: 44 },
+    { f: 1094, pos: [-81.2, 1.75, 4.0], look: [-81.25, 1.7, -1], fov: 44, glide: true },
+  ] },
+  { id: 10, a: 1090, b: TOTAL, sunAz: 140, keys: water1(1090, TOTAL) },
+];
+const K = kit(SHOTS, [{ f: 10, k: 0.04 }, { f: W.choca, k: 0.12 }, { f: W.levanta, k: 0.05 }]);
 export const camAt = K.camAt, layersAt = K.layersAt;
-export const dofAt = (id: number, f: number): { cInf: number; focus?: V3 } => { void f; return { cInf: id === S.cold ? 0 : 12 }; };
+export const dofAt = (id: number, f: number): { cInf: number; focus?: V3 } => { void f; return { cInf: id === S.berg || id === S.rise || id === S.sink ? 0 : 10 }; };
 export const MARKS: Mark[] = [
-  { a: 0, b: 80, label: "GATO ESPÍA", sub: "de la CIA", col: "#ff3b3b", big: true },
-  { a: 86, b: 172, label: "Guerra Fría", sub: "años 60", col: "#ffffff" },
-  { a: 392, b: 428, label: "OPERACIÓN", sub: "Gatito Acústico", col: "#ffd23f" },
-  { a: 586, b: 650, label: "MISIÓN 1", sub: "embajada soviética", col: "#ffd23f" },
-  { a: 920, b: TOTAL, label: "GATO ESPÍA", sub: "de la CIA", col: "#ff3b3b", big: true },
+  { a: 0, b: 98, label: "SE SALVÓ", sub: "gracias al whisky", col: "#ffd23f", big: true },
+  { a: 120, b: 192, label: "Charles Joughin", sub: "jefe de panaderos", col: "#ffffff" },
+  { a: 194, b: 244, label: "Abril", sub: "1912", col: "#ffffff" },
+  { a: 615, b: 668, label: "LA POPA", sub: "lo más alto", col: "#ffd23f" },
+  { a: 815, b: 868, label: "HORAS", sub: "en agua a -2 °C", col: "#7ad4ff" },
+  { a: 1000, b: 1044, label: "ALCOHOL", sub: "= más frío", col: "#ff3b3b" },
+  { a: 1094, b: TOTAL, label: "SE SALVÓ", sub: "gracias al whisky", col: "#ffd23f", big: true },
 ];
