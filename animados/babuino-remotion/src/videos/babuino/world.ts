@@ -1,125 +1,135 @@
-// "Operación Gatito Acústico": the CIA lab (LAB) and a Washington park across the road from the Soviet embassy (EMB).
+// "El babuino guardavías": Uitenhage station (RAIL, x = 0) with platform, track along z = -2.6, a train that comes and goes,
+// and the signal box with its lever frame (BOX, x = 6).
 import * as THREE from "three";
-import { Pen, Outfit, SKINS, WG } from "./toon";
-import { rep, ctex, planksHD, grassHD, facadeHD } from "./paint";
+import { Pen, Outfit, SKINS } from "./toon";
+import { rep, ctex, planksHD, roofHD, stoneHD } from "./paint";
 import { Base, Api, lam, lamC, box, cyl } from "./base";
-import { catDraw, pigeonDraw, burstDraw } from "./beasts";
-import { S, W, LAB, EMB } from "./story";
+import { burstDraw, coinDraw } from "./beasts";
+import { baboonDraw, bottleDraw, qDraw, xDraw, checkDraw, paperDraw, textDraw, zzzDraw } from "./extra";
+import { S, W, BOX } from "./story";
 
-const AGENT = (v: number): Outfit => ({ jacket: ["#2a2a32", "#3a3a44", "#2a3040"][v % 3], pants: "#2a2a32", boots: "#111", hat: v % 2 ? "slouch" : "hair", hair: "#3a2a20", skin: SKINS[v % 4], belt: null, buttons: "#c8c0b0" });
-const DOC: Outfit = { jacket: "#e8f0f2", pants: "#c8d8dc", boots: "#f2f2f2", hat: "cap", cap: "#9ad4c8", skin: SKINS[1], belt: null, buttons: "#9ad4c8", moustache: "#6a6a6a" };
-
-const ciaDraw = (p: Pen) => {
-  p.ell(256, 256, 230, 230, "#1e3a6a", 10); p.ell(256, 256, 170, 170, "#f2ece0", 6);
-  p.poly([[256, 120], [290, 220], [390, 220], [310, 280], [340, 380], [256, 320], [172, 380], [202, 280], [122, 220], [222, 220]], "#e8c45a", 6);
-  p.g.fillStyle = "#f2ece0"; p.g.font = "bold 70px Arial"; p.g.textAlign = "center"; p.g.fillText("CIA", 256, 470);
+const JAMES: Outfit = { jacket: "#2a3a6a", pants: "#2a2a32", boots: "#1a1a1e", hat: "cap", cap: "#1a2440", skin: SKINS[0], belt: null, buttons: "#e8c45a", moustache: "#8a5a2a" };
+const INSPECTOR: Outfit = { jacket: "#3a3a44", pants: "#2a2a32", boots: "#1a1a1e", hat: "tophat", skin: SKINS[1], belt: null, buttons: "#c8c0b0", moustache: "#5a5a5a", build: "stout" };
+const LADY: Outfit = { jacket: "#8a3a5a", pants: "#3a2a3a", boots: "#2a1a1a", hat: "bonnet", dress: "#c25a7a", skin: SKINS[0], buttons: "#f2ece0" };
+const DRIVER: Outfit = { jacket: "#4a4a52", pants: "#3a3a40", boots: "#1a1a1e", hat: "cap", cap: "#3a3a40", skin: SKINS[2], belt: null, buttons: "#9a9a9a" };
+const WORKER: Outfit = { jacket: "#6a5a3a", pants: "#3a3a40", boots: "#2a1a1a", hat: "cap", cap: "#5a4a2a", skin: SKINS[3], belt: null, buttons: "#9a9a9a" };
+/** the lever frame seen from the front: five levers, lever k pulled by pull[k] (0..1) */
+const leversDraw = (pull: number[]) => (p: Pen) => {
+  p.poly([[20, 360], [492, 360], [492, 420], [20, 420]], "#5a4a3a", 8);
+  pull.forEach((u, k) => { const x = 70 + k * 92, a = (-0.5 + u * 1.0); const tx = x + Math.sin(a) * 260, ty = 380 - Math.cos(a) * 260; p.stroke([[x, 380], [tx, ty]], 22, ["#c8323a", "#c8323a", "#3a6ac8", "#e8c45a", "#2a2a32"][k]); p.ell(tx, ty, 18, 18, "#d8d0c0", 5); });
 };
-const redFlag = (p: Pen) => { p.poly([[16, 16], [496, 16], [496, 302], [16, 302]], "#c8202a", 8); p.poly([[90, 50], [102, 86], [140, 86], [110, 108], [120, 144], [90, 122], [60, 144], [70, 108], [40, 86], [78, 86]], "#ffd23f", 0); };
-const bulbDraw = (p: Pen) => { p.ell(128, 110, 70, 75, "#fff3a0", 7); p.poly([[100, 175], [156, 175], [150, 225], [106, 225]], "#9aa2aa", 6); for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; p.stroke([[128 + Math.cos(a) * 92, 110 + Math.sin(a) * 92], [128 + Math.cos(a) * 118, 110 + Math.sin(a) * 118]], 8, "#ffd23f"); } };
-const fishDraw = (p: Pen) => { p.ell(128, 128, 118, 100, "#f4f1ea", 6); p.stroke([[60, 128], [180, 128]], 8); for (let k = 0; k < 4; k++) { p.stroke([[80 + k * 25, 100], [80 + k * 25, 156]], 6); } p.poly([[180, 128], [210, 100], [210, 156]], null, 6); p.ell(55, 128, 16, 16, null, 6); };
-const micDraw = (p: Pen) => { p.ell(128, 128, 60, 60, "#ffd23f", 0); p.dot(128, 128, 26, "#3a3a44"); };
-const docDraw = (stamp: boolean) => (p: Pen) => {
-  p.poly([[40, 20], [472, 20], [472, 600], [40, 600]], "#f2ecdc", 8);
-  const g = p.g; g.fillStyle = "#c8202a"; g.font = "bold 54px Arial"; g.textAlign = "center"; g.fillText("SECRETO", 256, 90);
-  g.fillStyle = "#2a2a32"; g.font = "bold 34px 'Courier New', monospace"; g.fillText("Gatos entrenados", 256, 160);
-  for (let k = 0; k < 8; k++) p.line([[80, 210 + k * 34], [430 - (k % 3) * 40, 210 + k * 34]], "#8a8478", 6, false);
-  if (stamp) { g.save(); g.translate(256, 470); g.rotate(-0.25); g.strokeStyle = "#c8202a"; g.lineWidth = 10; g.strokeRect(-200, -60, 400, 120); g.fillStyle = "#c8202a"; g.font = "bold 46px Arial"; g.fillText("NO PRÁCTICO", 0, 16); g.restore(); }
-};
-const taxiDraw = (p: Pen) => {
-  const G = WG, Y = "#ffcf2a";
-  p.poly([[160, G - 170], [180, G - 330], [560, G - 360], [760, G - 560], [1240, G - 560], [1460, G - 360], [1820, G - 330], [1840, G - 170]], Y, 12);
-  p.poly([[800, G - 520], [990, G - 520], [990, G - 380], [640, G - 380]], "#9ad4f2", 8); p.poly([[1020, G - 520], [1220, G - 520], [1380, G - 380], [1020, G - 380]], "#9ad4f2", 8);
-  for (let k = 0; k < 12; k++) p.g.fillStyle = k % 2 ? "#1a1a1e" : "#f4f1ea", p.g.fillRect(560 + k * 70, G - 300, 70, 30), p.g.fillStyle = k % 2 ? "#f4f1ea" : "#1a1a1e", p.g.fillRect(560 + k * 70, G - 270, 70, 30);
-  p.poly([[880, G - 640], [1120, G - 640], [1120, G - 570], [880, G - 570]], "#f4f1ea", 8);
-  p.g.fillStyle = "#1a1a1e"; p.g.font = "bold 56px Arial"; p.g.textAlign = "center"; p.g.fillText("TAXI", 1000, G - 585);
-  p.ell(1830, G - 260, 30, 40, "#fff3a0", 6);
-  for (const x of [470, 1530]) { p.ell(x, G - 140, 140, 140, "#1a1a1e", 10); p.ell(x, G - 140, 60, 60, "#c8c8d0", 6); }
-};
+const keyDraw = (p: Pen) => { p.ell(80, 128, 50, 50, null, 18); p.band([[130, 128], [230, 128]], "#e8c45a", 22, 6); p.stroke([[200, 128], [200, 170]], 16, "#e8c45a"); p.stroke([[225, 128], [225, 160]], 16, "#e8c45a"); p.ell(80, 128, 50, 50, null, 0); };
+const cartDraw = (p: Pen) => { p.poly([[30, 60], [226, 60], [226, 150], [30, 150]], "#8a5a34", 8); for (const x of [70, 186]) { p.ell(x, 180, 40, 40, "#2a2a30", 7); p.dot(x, 180, 8, "#c8c0b0"); } };
+const blanketDraw = (p: Pen) => { p.poly([[20, 40], [236, 40], [236, 200], [20, 200]], "#c8423a", 7); for (let k = 0; k < 4; k++) p.stroke([[20, 70 + k * 36], [236, 70 + k * 36]], 6, "#f2e2b8"); };
 
 export class World extends Base {
+  train = new THREE.Group();
   constructor() {
     super();
     const R = this.root;
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000).rotateX(-Math.PI / 2), lam({ map: rep(grassHD(), 600, 600), color: "#c8d49a" }));
+    const dust = ctex("dust", 256, 256, (g, r) => { g.fillStyle = "#c8a878"; g.fillRect(0, 0, 256, 256); for (let k = 0; k < 400; k++) { g.fillStyle = `rgba(${r() > 0.5 ? 90 : 230},${r() > 0.5 ? 70 : 200},50,${r() * 0.15})`; g.fillRect(r() * 256, r() * 256, 2 + r() * 5, 2 + r() * 3); } });
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(3000, 3000).rotateX(-Math.PI / 2), lam({ map: rep(dust, 500, 500), color: "#e0c898" }));
     ground.position.y = -0.02; ground.receiveShadow = true; R.add(ground);
-    // road and sidewalks
-    const asph = ctex("asphalt", 512, 512, (g, r) => { g.fillStyle = "#4a4a52"; g.fillRect(0, 0, 512, 512); for (let k = 0; k < 900; k++) { g.fillStyle = `rgba(${r() > 0.5 ? 255 : 0},${r() > 0.5 ? 255 : 0},255,${r() * 0.06})`; g.fillRect(r() * 512, r() * 512, 3, 3); } g.fillStyle = "#f2e2a0"; g.fillRect(0, 248, 200, 16); });
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(200, 6).rotateX(-Math.PI / 2), lam({ map: rep(asph, 50, 1) })); road.position.set(0, 0.0, -5); road.receiveShadow = true; R.add(road);
-    for (const z of [-1.6, -8.4]) box(R, 200, 0.14, 0.8, lamC("#c8c0b4"), 0, 0.07, z);
-    // embassy
-    box(R, 18, 10, 5, lam({ map: facadeHD("embassy", 18, 10, { wall: "#c8bca8", shutter: "#5a4a3a", door: true }) }), EMB[0], 5, EMB[2]);
-    box(R, 18.6, 0.8, 5.6, lamC("#a89880"), EMB[0], 10.2, EMB[2]);
-    cyl(R, 0.06, 0.06, 5, lamC("#d8d0c0"), EMB[0] + 5, 12.5, EMB[2] + 2, 6);
-    const iron = lamC("#2a2a30");
-    for (let k = 0; k < 40; k++) cyl(R, 0.03, 0.03, 1.4, iron, -20 + k, 0.7, -9.2, 4);
-    box(R, 40, 0.06, 0.06, iron, 0, 1.3, -9.2);
-    // park: trees, bench, lamp
-    const leaf = lamC("#4a7a3a"), trunk = lamC("#6a4a2a");
-    for (const [x, z] of [[-5, 3], [9, 6], [-8, -0.2], [8, 0.4], [-3.5, 7], [3, 9]] as const) { cyl(R, 0.15, 0.2, 2.4, trunk, x, 1.2, z, 6); const b = new THREE.Mesh(new THREE.SphereGeometry(1.5, 12, 8), leaf); b.position.set(x, 3.2, z); b.castShadow = true; R.add(b); }
-    const wood = lam({ map: rep(planksHD(), 1, 0.3), color: "#8a5a34" });
-    box(R, 1.8, 0.1, 0.5, wood, -2.4, 0.45, 2.2); box(R, 1.8, 0.5, 0.08, wood, -2.4, 0.75, 1.96);
-    cyl(R, 0.05, 0.06, 3.5, iron, 2.2, 1.75, -1.0, 6);
-    // the lab
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 10).rotateX(-Math.PI / 2), lamC("#d8d8d0")); floor.position.set(LAB[0], 0.01, LAB[2]); R.add(floor);
-    box(R, 14, 5, 0.2, lamC("#b8c8c8"), LAB[0], 2.5, LAB[2] - 3);
-    for (const dx of [-7, 7]) box(R, 0.2, 5, 10, lamC("#a8b8b8"), LAB[0] + dx, 2.5, LAB[2] + 2);
-    box(R, 1.6, 0.06, 0.9, lamC("#e8ece8"), LAB[0], 0.9, LAB[2]);
-    for (const dx of [-0.7, 0.7]) for (const dz of [-0.35, 0.35]) cyl(R, 0.03, 0.03, 0.9, lamC("#9aa2aa"), LAB[0] + dx, 0.45, LAB[2] + dz, 6);
-    box(R, 1.2, 0.06, 0.8, lamC("#c8b08a"), LAB[0] + 1.2, 0.9, LAB[2] - 0.2);
-    cyl(R, 0.03, 0.03, 0.9, iron, LAB[0] + 1.2, 0.45, LAB[2] - 0.2, 6);
-    const lamp = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.3, 16, 1, true), lamC("#3a5a5a", { side: THREE.DoubleSide })); lamp.position.set(LAB[0], 2.5, LAB[2]); R.add(lamp);
-    cyl(R, 0.01, 0.01, 2.5, iron, LAB[0], 3.8, LAB[2], 4);
-    // machines on the back wall
-    for (let k = 0; k < 3; k++) box(R, 0.9, 1.6, 0.5, lamC(["#8a9a8a", "#9a8a7a", "#7a8a9a"][k]), LAB[0] - 4 + k * 1.1, 0.8, LAB[2] - 2.6);
+    // track: ballast, sleepers, rails along x at z = -2.6
+    const bal = new THREE.Mesh(new THREE.PlaneGeometry(400, 2.6).rotateX(-Math.PI / 2), lamC("#8a8078")); bal.position.set(0, 0.005, -2.6); bal.receiveShadow = true; R.add(bal);
+    const sl = lamC("#5a4030"); for (let k = 0; k < 120; k++) box(R, 0.22, 0.08, 2.0, sl, -60 + k, 0.04, -2.6);
+    for (const dz of [-0.55, 0.55]) box(R, 400, 0.1, 0.07, lamC("#6a6a72"), 0, 0.13, -2.6 + dz);
+    // platform and station building
+    box(R, 30, 0.5, 2.6, lam({ map: rep(stoneHD(), 10, 1), color: "#c8c0b0" }), -4, 0.25, 0.2);
+    const wall = lam({ map: rep(planksHD(), 3, 1), color: "#e8d8b8" });
+    box(R, 10, 3.6, 4, wall, -5, 1.8, 4.6 + 4); // behind the camera side: keeps the frame clean
+    box(R, 9, 3.4, 4, wall, -6, 1.7, -8); const rf = new THREE.Mesh(new THREE.ConeGeometry(7, 2, 4), lam({ map: rep(roofHD("#7a3a2a"), 2, 2) })); rf.rotation.y = Math.PI / 4; rf.scale.set(1, 1, 0.5); rf.position.set(-6, 4.4, -8); R.add(rf);
+    const sign = new THREE.Mesh(new THREE.PlaneGeometry(3, 0.6), lamC("#f2ece0")); sign.position.set(-6, 3.0, -5.98); R.add(sign);
+    // signal box: small raised cabin with big windows, the lever frame is drawn as fx
+    box(R, 3.2, 0.5, 2.6, lam({ map: rep(planksHD(), 1, 1), color: "#8a5a34" }), BOX[0], 0.25, BOX[2] - 0.6);
+    box(R, 3.2, 2.4, 0.15, lam({ map: rep(planksHD(), 1, 1), color: "#a8423a" }), BOX[0], 1.7, BOX[2] - 1.9);
+    for (const dx of [-1.6, 1.6]) box(R, 0.12, 2.4, 2.6, lamC("#a8423a"), BOX[0] + dx, 1.7, BOX[2] - 0.6);
+    box(R, 3.6, 0.15, 3.0, lam({ map: rep(roofHD("#4a4a52"), 1, 1) }), BOX[0], 3.0, BOX[2] - 0.6);
+    // semaphore post
+    cyl(R, 0.07, 0.08, 5, lamC("#e8e4dc"), BOX[0] + 3, 2.5, -1.2, 8);
+    // the train (moved in pose): loco + 3 carriages, facing -x
+    R.add(this.train);
+    const T = this.train, blk = lamC("#2a2a30"), grn = lamC("#3a6a4a"), red = lamC("#8a2a26");
+    box(T, 4.5, 1.6, 1.8, blk, 0, 1.3, 0); cyl(T, 0.75, 0.75, 4, blk, 0.2, 1.7, 0, 16).rotation.z = Math.PI / 2;
+    cyl(T, 0.22, 0.3, 1.0, blk, -1.4, 2.8, 0, 10); box(T, 1.6, 2.2, 1.9, red, 1.7, 2.0, 0);
+    for (const dx of [-1.5, -0.3, 0.9]) { const w = cyl(T, 0.55, 0.55, 2.0, lamC("#c8323a"), dx, 0.6, 0, 16); w.rotation.x = Math.PI / 2; }
+    for (let c = 0; c < 3; c++) { const x = 5.6 + c * 5.4; box(T, 5, 2.2, 2.0, grn, x, 1.6, 0); box(T, 5.2, 0.15, 2.2, lamC("#5a4a3a"), x, 2.8, 0); for (let k = 0; k < 4; k++) { const w = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.6), lamC("#f2e2a8")); w.position.set(x - 1.7 + k * 1.15, 1.9, 1.01); T.add(w); } for (const dx of [-1.6, 1.6]) { const wh = cyl(T, 0.4, 0.4, 2.1, blk, x + dx, 0.45, 0, 12); wh.rotation.x = Math.PI / 2; } }
+    T.position.set(40, 0, -2.6);
   }
 
   pose(a: Api) {
     const { f, t, id, person, card, fx } = a;
-    const C = 0.38, X = LAB[0];
-    const cat = (x: number, z: number, mode: "walk" | "sit" | "flat", spy: number, y = 0, dir = 1, dz = 0) =>
-      card(`cat|${mode}|${spy}|${mode === "walk" ? Math.round(t * 8) % 8 : 0}`, x, z, C, catDraw((Math.round(t * 8) % 8) * 0.785, mode, spy), dir, dz, y);
-    if (id === S.hook || id === S.end || id === S.idea) {
-      fx("cia", 512, 512, ciaDraw, X, 2.45, LAB[2] - 2.85, 0.9, 0.9);
-      if (id !== S.idea || f > W.gato - 3) cat(X, 0, "sit", id === S.idea ? 0 : 2, 0.93);
-      for (let k = 0; k < 2; k++) person(`ag${k}`, AGENT(k), X + (k ? 0.95 : -0.95), 0, -0.6, { mode: "stand", expr: id === S.idea ? (f > W.gato - 3 ? "grin" : f > W.ocurre - 4 ? "smile" : "stern") : k ? "grin" : "stern", facing: (k ? -1 : 1) as -1 | 1, wave: id === S.idea && k === 0 && f > W.ocurre - 4 && f < W.gato - 3 ? 0.9 : undefined }, 1 + k);
-      if (id === S.idea && f > W.ocurre - 4 && f < W.gato - 3) fx("bulb", 256, 256, bulbDraw, X - 0.95, 2.25, -0.4, 0.4, 0.4);
-      if (id === S.idea && f > W.gato - 3 && f < W.gato + 8) fx("burst", 256, 256, burstDraw(), X, 1.3, 0.2, 0.6, 0.6);
+    // train position per shot
+    let tx = 60;
+    if (id === S.hook || id === S.end) tx = 14 - ((id === S.end ? f - 1074 : f) * 0.12);
+    if (id === S.intro) tx = 30 - (f - 96) * 0.2;
+    if (id === S.fall) tx = -3;
+    if (id === S.keys) tx = -5.0;
+    if (id === S.lady) tx = 0.5;
+    if (id === S.levers) tx = 20 - (f - 498) * 0.25;
+    this.train.position.x = tx;
+    const B = BOX[0];
+    const jack = (key: string, x: number, y: number, z: number, mode: "walk" | "sit" | "lever" | "push" | "proud", pull = 0, mood: "calm" | "wide" | "happy" = "calm", dir = 1, cap = false) => {
+      const ph = (Math.round(t * 8) % 8) * 0.785, pq = Math.round(pull * 6) / 6;
+      card(`jack|${key}|${mode}|${pq}|${mood}|${cap ? 1 : 0}|${mode === "walk" || mode === "push" ? Math.round(t * 8) % 8 : 0}`, x, z, 0.4, baboonDraw(ph, mode, pq, mood, cap), dir, 0, y);
+    };
+    const levers = (k0: number, u: number) => { const pull = [0, 0.15, 0, 0, 0]; pull[k0] = u; fx(`lev|${pull.map((v) => Math.round(v * 6)).join("")}`, 512, 420, leversDraw(pull.map((v) => Math.round(v * 6) / 6)), B + 0.35, 0.95, -0.4, 1.0, 0.82); };
+    const pullAt = (fr: number, per = 40) => 0.5 - 0.5 * Math.cos(((fr % per) / per) * Math.PI * 2);
+    const seated = (x: number, z: number, expr: "grin" | "smile" | "laugh" | "shock" | "stern" | "relief" | "nervous", k = 1) => {
+      fx("cart", 256, 256, cartDraw, x, 0.75, z + 0.15, 0.85, 0.85);
+      person("james", JAMES, x, 0.55, z, { mode: "sit", expr, facing: 1 }, k, false);
+      fx("blanket", 256, 256, blanketDraw, x + 0.05, 0.9, z + 0.25, 0.6, 0.45);
+    };
+    if (id === S.hook || id === S.end || id === S.levers) {
+      const u = pullAt(f + 10);
+      levers(2, u);
+      jack("box", B + 0.05, 0.5, -0.1, "lever", u, "calm", 1, true);
     }
-    if (id === S.surgery) {
-      fx("cia", 512, 512, ciaDraw, X, 2.45, LAB[2] - 2.85, 0.9, 0.9);
-      const spy = f > W.antena - 3 ? 2 : f > W.micro - 3 ? 1 : 0;
-      cat(X + 0.1, 0, "sit", spy, 0.93);
-      person("doc", DOC, X - 0.75, 0, -0.1, { mode: "stand", expr: "stern", facing: 1, wave: Math.sin(t * 5) * 0.4 + 0.5 }, 1);
-      if (f > W.micro - 3 && f < W.antena - 3) fx("mic", 256, 256, micDraw, X - 0.02, 1.55 + 0.02 * Math.sin(t * 9), 0.15, 0.12, 0.12);
+    if (id === S.intro) person("james", JAMES, -1.2, 0.5, 0, { mode: f < W.ferrocarril ? "stroll" : "stand", phase: t * 6, expr: "smile", facing: 1, wave: f > W.ferrocarril ? 0.8 : undefined }, 1);
+    if (id === S.fall) {
+      const down = f > W.cae - 4;
+      person("james", JAMES, -1.6, 0.5, -0.6, { mode: down ? "fall" : "stand", expr: down ? "shock" : "smile", facing: 1 }, 1);
+      if (f > W.cae - 3 && f < W.cae + 12) fx("hit", 256, 256, burstDraw(), -1.5, 1.0, -0.4, 1.1, 1.1);
+      if (f > W.pierde - 4) fx("x", 256, 256, xDraw, -1.0, 1.6, -0.3, 0.45, 0.45);
     }
-    if (id === S.problem) {
-      const xs = -1.3 + (f - 426) * 0.016;
-      const chase = f > W.pajaros - 4, sit = f > W.distrae - 4 && !chase;
-      const cx = chase ? xs + (f - W.pajaros + 4) * 0.03 : xs;
-      cat(cx, 2, sit ? "sit" : "walk", 2, 0);
-      if (f > W.hambre - 4 && f < W.pajaros - 4) fx("fish", 256, 256, fishDraw, cx + 0.15, 0.95, 2.1, 0.3, 0.3);
-      if (f > W.pajaros - 10) card(`bird|${Math.floor(f / 4) % 2}`, cx + 0.9 + (f - W.pajaros) * 0.01, 2, 0.16, pigeonDraw(Math.floor(f / 4) % 2), 1, 0, Math.max(0, (f - W.pajaros) * 0.01));
-      for (let k = 0; k < 2; k++) person(`ag${k}`, AGENT(k), -2.75 + k * 0.7, 0.05, 2.3, { mode: "sit", expr: f > W.gana - 4 ? "nervous" : "stern", facing: 1 }, 1 + k);
+    if (id === S.buy) {
+      seated(-0.2, 0.2, f > W.babuino - 4 ? "grin" : "stern");
+      if (f > W.que - 4 && f < W.compra) fx("q", 256, 256, qDraw(), -0.2, 1.7, 0.2, 0.4, 0.4);
+      if (f > W.babuino - 4) { jack("buy", 0.7, 0.5, 0.25, "sit", 0, f > W.jack - 4 ? "happy" : "wide", -1); if (f < W.babuino + 8) fx("pop", 256, 256, burstDraw("#ffd23f"), 0.7, 0.8, 0.2, 0.8, 0.8); }
     }
-    if (id === S.mission || id === S.taxi) {
-      fx("redflag", 512, 320, redFlag, EMB[0] + 5.7, 14.3, EMB[2] + 2, 1.4, 0.88);
-      if (id === S.mission) {
-        const go = f > W.sueltan - 4, z = go ? -0.6 - (f - W.sueltan + 4) * 0.012 : -0.4;
-        cat(0, z, go ? "walk" : "sit", 2, 0, 0, -1);
-        for (let k = 0; k < 2; k++) person(`ag${k}`, AGENT(k), (k ? 0.7 : -0.7), 0, 0.3, { mode: "stand", expr: f > W.sueltan - 4 ? "grin" : "stern", facing: (k ? -1 : 1) as -1 | 1, wave: k === 0 && f > W.sueltan - 4 && f < W.sueltan + 30 ? 0.8 : undefined }, 1 + k);
-      } else {
-        const hit = f >= W.atropella;
-        const z = hit ? -4.6 : -1.6 - Math.max(0, f - 698) * 0.066;
-        cat(0, Math.max(z, -4.6), hit ? "flat" : "walk", 2, 0, 1, 0);
-        const tx = (f - W.atropella) * 0.2;
-        if (tx > -14 && tx < 14) card("taxi", tx, -4.2, 1.1, taxiDraw, 1, 0);
-        if (f >= W.atropella - 1 && f < W.atropella + 8) fx("burst", 256, 256, burstDraw(), 0, 0.5, -4.2, 0.9, 0.9);
-      }
+    if (id === S.push) {
+      const x = -1.6 + (f - 388) * 0.04;
+      seated(x, 0.2, "laugh");
+      jack("push", x - 0.75, 0.5, 0.25, "push", 0, "happy", 1, true);
     }
-    if (id === S.report) {
-      const stamp = f > W.practico - 4;
-      fx(`doc|${stamp ? 1 : 0}`, 512, 620, docDraw(stamp), X + 1.2, 1.25, LAB[2] - 0.15, 0.6, 0.73);
-      person("ag0", AGENT(0), X + 2.0, 0, -0.7, { mode: "stand", expr: stamp ? "nervous" : "stern", facing: -1, headTilt: stamp ? 10 * Math.sin(t * 10) : 0 }, 1);
+    if (id === S.keys) {
+      person("driver", DRIVER, -2.9, 0.5, -1.2, { mode: "stand", expr: f > W.maquinistas - 4 ? "shock" : "neutral", facing: -1, wave: f > W.llaves ? 0.6 : undefined }, 2);
+      jack("keys", -3.8, 0.5, -0.7, "proud", 0, "happy", 1, true);
+      fx("key", 256, 256, keyDraw, -3.45, 1.15 + Math.min(0.2, (f - 444) * 0.004), -0.6, 0.25, 0.25);
+    }
+    if (id === S.lady) {
+      person("lady", LADY, 2.9, 0.5, -0.4, { mode: "stand", expr: f > W.mono - 4 ? "shock" : "smile", facing: 1 }, 1);
+      jack("seen", B + 0.05, 0.5, -0.1, "lever", pullAt(f), "calm", 1, true);
+      levers(1, pullAt(f));
+      if (f > W.escandalo - 4) fx("bang", 512, 256, textDraw("¡¡!!", "#ff3b3b", 170), 2.9, 2.35, -0.3, 0.6, 0.3);
+    }
+    if (id === S.exam) {
+      const pass = f > W.aprobado - 4;
+      person("insp", INSPECTOR, B + 0.95, 0.5, 0.3, { mode: "stand", expr: pass ? "shock" : "stern", facing: -1, wave: f > W.contratan - 4 ? 0.9 : undefined }, 1);
+      jack("exam", B - 0.25, 0.5, -0.1, "lever", pullAt(f, 30), pass ? "happy" : "calm", 1, true);
+      levers(3, pullAt(f, 30));
+      fx(`exam|${pass ? 1 : 0}`, 512, 620, paperDraw("EXAMEN", ["Señales: OK", "Agujas: OK", "Llaves: OK"], pass ? "APROBADO" : undefined, "#2a8a3a"), B + 1.3, 1.6, 0.5, 0.42, 0.5);
+    }
+    if (id === S.pay) {
+      jack("pay", 0.3, 0.5, 0, "proud", 0, "happy", 1, true);
+      if (f > W.veinte - 4) for (let k = 0; k < 3; k++) fx(`coin${k}`, 256, 256, coinDraw("20¢"), -0.2 + k * 0.2, 1.4 + 0.04 * Math.sin(t * 5 + k), 0.1, 0.18, 0.18);
+      if (f > W.media - 4 && f < W.nueve) fx("beer", 256, 256, bottleDraw(), 0.75, 1.2, 0.1, 0.3, 0.3);
+      if (f > W.nueve - 4) fx("ok", 256, 256, checkDraw, 0.75, 1.3, 0.1, 0.3, 0.3);
+    }
+    if (id === S.best) {
+      jack("best", -2.75, 0.5, -0.2, "proud", 0, "happy", 1, true);
+      person("lazy", WORKER, -1.75, 0.5, -0.5, { mode: "sit", expr: "dazed", facing: -1 }, 2, false);
+      fx("zzzW", 256, 256, zzzDraw, -1.55, 1.75, -0.4, 0.4, 0.4);
     }
   }
 }
