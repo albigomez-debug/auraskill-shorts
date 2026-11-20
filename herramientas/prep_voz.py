@@ -5,7 +5,7 @@ src = sys.argv[1].rstrip("/"); slug = os.path.basename(src); tempo = float(sys.a
 dst = f"{src}-remotion"; os.makedirs(f"{dst}/public/voz", exist_ok=True)
 import numpy as np
 from scipy.io import wavfile
-SR = 48000; MAXGAP = 0.30  # pausas largas entre palabras se recortan a MAXGAP (segundos, antes del tempo)
+SR = 48000; MAXGAP = 0.26  # pausas largas entre palabras se recortan a MAXGAP (segundos, antes del tempo)
 raw = subprocess.run(["ffmpeg", "-v", "error", "-i", f"{src}/voz.mp3", "-f", "s16le", "-ac", "1", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
 x = np.frombuffer(raw, np.int16).astype(np.float32)
 d = json.load(open(f"{src}/palabras.json", encoding="utf-8"))
