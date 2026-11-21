@@ -15,6 +15,10 @@ on:
         type: choice
         options: ["si", "no"]
         default: "si"
+      guion:
+        description: "Opcional: ruta a un guion ya escrito (p. ej. guiones/tortilla-cebolla.json). Vacío = lo escribe Gemini"
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -49,12 +53,12 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          GUION: ${{ github.event.inputs.guion }}
         run: |
-          if [ "${{ github.event.inputs.subir }}" = "no" ]; then
-            python main.py --sin-subir
-          else
-            python main.py
-          fi
+          ARGS=""
+          if [ "${{ github.event.inputs.subir }}" = "no" ]; then ARGS="--sin-subir"; fi
+          if [ -n "$GUION" ]; then ARGS="$ARGS --guion $GUION"; fi
+          python main.py $ARGS
 
       - name: Guardar el vídeo para descargarlo (TikTok)
         if: always()
