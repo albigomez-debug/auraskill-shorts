@@ -35,8 +35,8 @@ export abstract class Base {
   private pool = new Pool();
   private actors: Actor[] = [];
   private fxs: Fx[] = [];
-  protected hemi: THREE.HemisphereLight; protected sun: THREE.DirectionalLight;
-  protected skyMat: THREE.ShaderMaterial; private sky: THREE.Mesh;
+  private hemi: THREE.HemisphereLight; private sun: THREE.DirectionalLight;
+  private skyMat: THREE.ShaderMaterial; private sky: THREE.Mesh;
   private fog = new THREE.Fog("#cfdcea", 60, 420);
   private clouds: THREE.Mesh[] = [];
   private sunCache = new Map<number, THREE.Vector3>();

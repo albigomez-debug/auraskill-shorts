@@ -1,64 +1,102 @@
-// Pimpín 3 · "El vendaval": Villazanca square in a storm; the barn at BARN; the well at (5, -3).
+// Pimpín 3 · "Súper flaco": all in the plaza. Long table at z = 3, lamp post at LP, drain grate at GR.
 import * as THREE from "three";
-import { Pen } from "./toon";
-import { Base, Api, lam, lamC, box, cyl } from "./base";
-import { rep, planksHD } from "./paint";
-import { textDraw, labelDraw, ctaDraw } from "./props";
-import { villazanca, TALL, PIM, PIMPIN, ALCALDESA, VEC } from "./villa";
-import { S, W, BARN, storm, fly, pull, smooth } from "./story";
+import { Pen, Outfit, SKINS } from "./toon";
+import { Base, Api, lamC, box } from "./base";
+import { textDraw, ctaDraw, bubbleDraw } from "./props";
+import { catDraw } from "./beasts";
+import { villazanca, PIMPIN, VEC, KIDV, ALCALDESA, keyDraw } from "./villa";
+import { S, W, LP, GR, smooth } from "./story";
 
-const windDraw = (k: number) => (p: Pen) => { p.g.strokeStyle = "rgba(255,255,255,0.85)"; p.g.lineCap = "round"; for (let j = 0; j < 7; j++) { const y = 30 + j * 34, x = ((k * 90 + j * 140) % 700) - 200; p.g.lineWidth = 6; p.g.beginPath(); p.g.moveTo(x, y); p.g.bezierCurveTo(x + 80, y - 10, x + 160, y + 10, x + 240, y); p.g.stroke(); } };
-const veilDraw = (k: number, ph: number) => (p: Pen) => { p.g.fillStyle = `rgba(28,30,58,${0.5 * k})`; p.g.fillRect(0, 0, 256, 256); p.g.strokeStyle = `rgba(200,210,240,${0.55 * k})`; p.g.lineWidth = 2; for (let j = 0; j < 40; j++) { const x = (j * 53 + ph * 37) % 280 - 10, y = (j * 71 + ph * 61) % 270 - 10; p.g.beginPath(); p.g.moveTo(x, y); p.g.lineTo(x - 8, y + 26); p.g.stroke(); } };
-const hatDraw = (p: Pen) => { p.poly([[70, 60], [186, 60], [186, 190], [70, 190]], "#2a2a30", 8); p.poly([[30, 190], [226, 190], [226, 220], [30, 220]], "#2a2a30", 8); p.poly([[70, 160], [186, 160], [186, 185], [70, 185]], "#c8202a", 0); };
-const scarfDraw = (k: number) => (p: Pen) => { const w = (x: number) => 128 + Math.sin(x * 0.03 + k) * 40; p.band([[10, w(10)], [130, w(130)], [250, w(250)], [380, w(380)], [500, w(500)]], "#e2453c", 46, 7); };
+export const PIMS = 1.12;
+const THIN: Outfit = { ...PIMPIN, build: "thin" };
+const ABUELA: Outfit = { jacket: "#8a6a9a", pants: "#4a3a4a", boots: "#2a1a1a", hat: "hair", hair: "#e8e8ec", skin: SKINS[0], dress: "#8a6a9a", belt: null };
+const plateDraw = (n: number) => (p: Pen) => { p.ell(128, 170, 118, 50, "#f4f4f8", 7); if (n > 0) for (let k = 0; k < n; k++) { const x = 40 + ((k * 53) % 176), y = 130 + ((k * 31) % 50); p.band([[x, y], [x + 22, y - 8]], "#f2b84a", 14, 3); } else p.band([[110, 160], [146, 152]], "#f2b84a", 14, 3); };
+const macDraw = (p: Pen) => p.band([[40, 160], [128, 110], [216, 160]], "#f2b84a", 46, 6);
+const windDraw = (k: number) => (p: Pen) => { for (let j = 0; j < 9; j++) { const y = 40 + j * 52, x = ((j * 137 + k * 90) % 700) - 200; p.band([[x, y], [x + 200, y - 8], [x + 300, y]], "#ffffff", 7, 0); } };
+const broomDraw = (p: Pen) => { p.poly([[118, 0], [138, 0], [138, 380], [118, 380]], "#a8743a", 5); p.poly([[70, 380], [186, 380], [210, 510], [46, 510]], "#e8c86a", 6); };
+const sockDraw = (p: Pen) => { p.poly([[90, 20], [170, 20], [170, 170], [220, 210], [200, 250], [100, 230], [90, 170]], "#e8e4d8", 7); p.poly([[90, 40], [170, 40], [170, 60], [90, 60]], "#d8302a", 0); p.poly([[90, 80], [170, 80], [170, 100], [90, 100]], "#3a6ab8", 0); };
+const frogDraw = (p: Pen) => { p.ell(128, 170, 90, 60, "#5ab83a", 7); p.ell(88, 100, 30, 30, "#5ab83a", 6); p.ell(168, 100, 30, 30, "#5ab83a", 6); p.ell(88, 100, 12, 14, "#1a1a1a", 0); p.ell(168, 100, 12, 14, "#1a1a1a", 0); p.band([[90, 180], [128, 196], [166, 180]], "#2a5a1a", 6, 0); };
+const confDraw = (k: number) => (p: Pen) => { const c = ["#e2453c", "#f2c84a", "#3a8ac8", "#5ab85a", "#c85ab8"]; for (let j = 0; j < 36; j++) { p.g.fillStyle = c[j % 5]; p.g.fillRect((j * 97 + k * 31) % 512, (j * 61 + k * 47) % 512, 12, 20); } };
 
 export class World extends Base {
-  rope = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 1, 6), lamC("#c8a060"));
   constructor() {
     super();
     const R = this.root;
     villazanca(R);
-    // barn
-    const red = lam({ map: rep(planksHD(), 2, 2), color: "#b83a2a" }); const B0 = BARN[0], bz = BARN[2];
-    box(R, 7, 6, 6, red, B0, 3, bz); const roof = new THREE.Mesh(new THREE.ConeGeometry(5.2, 3, 4), lamC("#5a3a2a")); roof.rotation.y = Math.PI / 4; roof.scale.set(1, 1, 0.85); roof.position.set(B0, 7.5, bz); R.add(roof);
-    box(R, 3.4, 4.2, 0.08, lamC("#3a1a12"), B0, 2.1, bz + 3.02); box(R, 3.6, 0.2, 0.1, lamC("#f4f1ea"), B0, 4.3, bz + 3.04);
-    // street lamps
-    for (const x of [-2.5, 9]) { cyl(R, 0.09, 0.12, 4.6, lamC("#2a2a30"), x, 2.3, 2.6, 8); box(R, 0.5, 0.6, 0.5, lamC("#f2e2a0"), x, 4.8, 2.6); }
-    this.rope.visible = false; R.add(this.rope);
+    const wood = lamC("#b07a40"), cloth = lamC("#f4f1ea");
+    box(R, 8, 0.08, 1.2, cloth, 0, 0.82, 3.0); for (const x of [-3.7, 3.7]) for (const z of [2.6, 3.4]) box(R, 0.12, 0.8, 0.12, wood, x, 0.4, z);
+    const iron = lamC("#2a2a30");
+    box(R, 0.18, 4.2, 0.18, iron, LP[0], 2.1, LP[2]); box(R, 0.7, 0.5, 0.7, lamC("#f2e48a"), LP[0], 4.4, LP[2]); box(R, 0.8, 0.12, 0.8, iron, LP[0], 4.7, LP[2]);
+    box(R, 1.6, 0.03, 1.2, lamC("#0a0a0c"), GR[0], 0.015, GR[2]);
+    for (let k = 0; k < 7; k++) box(R, 0.06, 0.06, 1.2, iron, GR[0] - 0.72 + k * 0.24, 0.05, GR[2]);
+    box(R, 1.7, 0.08, 0.08, iron, GR[0], 0.05, GR[2] - 0.6); box(R, 1.7, 0.08, 0.08, iron, GR[0], 0.05, GR[2] + 0.6);
   }
   pose(a: Api) {
-    const { f, t, id, person, fx, cam } = a;
-    const k = storm(f, id), ph = Math.floor(f / 2) % 6;
-    if (k > 0) { this.sun.intensity *= 1 - 0.7 * k; this.hemi.intensity *= 1 - 0.35 * k; const dk = new THREE.Color("#3a3e52"); for (const u of ["c0", "c1", "c2", "c3", "c4"]) (this.skyMat.uniforms[u].value as THREE.Color).lerp(dk, 0.85 * k); }
-    // rain/darkness veil in front of the camera
-    if (k > 0.02) { const d = new THREE.Vector3(); cam.getWorldDirection(d); const p = cam.position.clone().addScaledVector(d, 0.8); fx(`veil|${Math.round(k * 6)}|${ph}`, 256, 256, veilDraw(Math.round(k * 6) / 6, ph), p.x, p.y, p.z, 2.2, 2.2, true); }
-    const windy = k > 0.5 && id !== S.applause;
-    const pim = { x: 3.5, z: -0.6 };
-    // villagers
-    for (let j = 0; j < (id === S.cta ? 0 : 9); j++) {
-      const x0 = -5 + (j % 5) * 2.6 + Math.floor(j / 5) * 1.3, z0 = 0.6 + Math.floor(j / 5) * 2.0;
-      let x = x0, y = 0, tilt = 0, mode: "stand" | "sit" = "stand", wave: number | undefined; let expr: any = "neutral"; // eslint-disable-line
-      if (id === S.applause) { mode = "sit"; expr = "laugh"; wave = 0.6 + Math.sin(t * 8 + j) * 0.35; }
-      else if (id === S.rope) { const pl = pull(f, j); x = x0 + 0.6 + (1 - pl) * 0; tilt = -0.35 * (1 - pl); y = 0; expr = pl > 0.5 ? "relief" : "shock"; x = x0 * (1 - pl) + BARN[0] * pl; }
-      else if (windy) { const [dx, dy] = fly(f, j, id); x = x0 + dx; y = dy; tilt = 0.9 + Math.sin(t * 6 + j) * 0.15; expr = "shock"; wave = 0.95; }
-      else expr = id === S.intro ? "grin" : "neutral";
-      const zz = id === S.rope ? z0 * (1 - pull(f, j)) + (BARN[2] + 3.2) * pull(f, j) : z0;
-      person(`v${j}`, VEC(j), x, y, zz, { mode, expr, facing: 0, tilt, wave }, 10 + j, y < 0.05, TALL);
-      if (id === S.rope && f > W.engancha + j * 5 && pull(f, j) < 0.98) fx(`kn${j}`, 128, 128, (p: Pen) => p.ell(64, 64, 30, 30, "#c8a060", 6), x, 1.5 * TALL * 0.75, zz + 0.1, 0.18, 0.18);
+    const { f, t, id, person, fx, card } = a;
+    const ph = Math.floor(t * 8) % 4;
+    if (id === S.hook || id === S.ja || id === S.end) {
+      for (let j = 0; j < 8; j++) { const x = -3.2 + j * 0.9; if (Math.abs(x) < 0.5) continue; person(`v${j}`, { ...VEC(j), build: "stout" }, x, 0, 2.2, { mode: "stand", expr: id === S.ja ? "laugh" : j % 2 ? "lick" : "grin", facing: 0, tilt: Math.sin(t * 9 + j) * 0.06 }, 10 + j, true, 1.0); fx(`pl${j}`, 256, 256, plateDraw(9), x, 0.95, 3.1, 0.55, 0.55); }
+      person("pim", THIN, 0, 0, 2.2, { mode: "stand", expr: id === S.ja ? "nervous" : "smile", facing: 0 }, 1, true, PIMS);
+      fx("plp", 256, 256, plateDraw(0), 0, 0.95, 3.1, 0.55, 0.55);
+      if (id === S.ja) fx("jaja", 512, 200, textDraw("¡JA, JA, JA!", "#ffd23f", 80), 0, 2.9, 2.6, 1.3, 0.5);
     }
-    // the mayor flies off
-    if (id === S.sails || id === S.hook || id === S.end) { const s = id === S.sails ? smooth((f - W.alcaldesa + 10) / 30) : 0.6; person("alc", ALCALDESA, -1 + s * 5, 0.2 + s * 4.5, -1.5, { mode: "stand", expr: "shock", facing: 0, tilt: 0.9 * s, wave: 0.95 }, 2, false, TALL); }
-    // Pimpín
-    const calm = id === S.ground || id === S.hook || id === S.end;
-    person("pim", PIMPIN, id === S.rope ? pim.x + Math.min(0, -(f - W.tira) * 0.02) : pim.x, 0, pim.z, { mode: "stand", expr: id === S.applause ? "laugh" : calm ? "whistle" : id === S.rope ? "stern" : id === S.intro ? "smile" : "nervous", facing: 0, wave: id === S.applause || (id === S.rope && f > W.tira - 4) ? 0.95 : undefined }, 1, true, PIM);
-    if (id === S.intro && f > W.pimpin - 4) { fx("name", 512, 160, labelDraw("PIMPÍN", "#e2453c"), pim.x, 1.75, pim.z + 0.1, 0.7, 0.22); if (f > W.metro - 4) fx("m", 512, 200, textDraw("1,20 m", "#ffd23f", 110), pim.x, 1.45, pim.z + 0.1, 0.7, 0.27); }
-    if (windy) for (let j = 0; j < 4; j++) fx(`w${j}|${(ph + j) % 6}`, 512, 256, windDraw((ph + j) % 6), -2 + j * 3.2, 2.3 + (j % 2) * 1.4, 1.2 - j * 0.6, 3.2, 1.6, true);
-    if (id === S.sails && f > W.sombreros - 6) for (let j = 0; j < 3; j++) { const s = (f - W.sombreros + j * 8) * 0.06; fx(`hat${j}`, 256, 256, hatDraw, -3 + s * 2 + j, 3.0 + Math.sin(s * 2 + j) * 0.6 + s * 0.4, 1 - j * 0.8, 0.5, 0.5); }
-    if (id === S.sails && f > W.bufandas - 6) for (let j = 0; j < 2; j++) { const s = (f - W.bufandas + j * 6) * 0.06; fx(`sc${j}|${ph}`, 512, 256, scarfDraw(ph), -2 + s * 2.4 + j, 2.6 + j * 0.8 + s * 0.3, 0.5 - j, 1.0, 0.5); }
-    if (id === S.ground) fx("calm", 512, 200, textDraw("¡NI UNA BRISA!", "#8ae86a", 58), pim.x, 1.55, pim.z + 0.2, 0.9, 0.35);
-    // rope from the well to Pimpín
-    this.rope.visible = id === S.rope && f > W.ata - 4;
-    if (this.rope.visible) { const A = new THREE.Vector3(5, 0.9, -3), B = new THREE.Vector3(pim.x, 0.6, pim.z + 0.1); this.rope.position.copy(A).add(B).multiplyScalar(0.5); this.rope.scale.set(1, A.distanceTo(B), 1); this.rope.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), B.clone().sub(A).normalize()); }
-    if (id === S.cta) { const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), pim.x, 2.6, pim.z + 0.5, 2.2, 1.1); }
+    if (id === S.side) {
+      const turn = f > W.lado - 4, gone = f > W.desaparece - 2;
+      if (!gone) person("pim", THIN, 0, 0, 5.5, { mode: "stand", expr: "smile", facing: turn ? 1 : 0 }, 1, true, PIMS);
+      if (gone) fx("q", 512, 256, bubbleDraw("¿PIMPÍN?"), 0, 2.0, 5.5, 1.0, 0.5);
+    }
+    if (id === S.wind) {
+      const blow = smooth((f - W.viento + 6) / 12);
+      person("pim", THIN, LP[0] + 0.25 + blow * 0.9, 1.1 * blow, LP[2], { mode: blow > 0.5 ? "fall" : "stand", expr: "shock", facing: 1, tilt: blow * 1.35 + Math.sin(t * 14) * 0.08 * blow }, 1, false, PIMS);
+      fx(`w|${ph}`, 1024, 512, windDraw(ph), LP[0] + 0.8, 1.8, LP[2] + 0.6, 4, 2, true);
+      if (f > W.atan - 4) fx("rope", 512, 64, (p: Pen) => p.band([[0, 32], [512, 32]], "#c8a06a", 22, 5), LP[0] + 0.25, 1.2, LP[2] + 0.12, 0.5, 0.07);
+    }
+    if (id === S.hide) {
+      fx("broom", 256, 512, broomDraw, 0.35, 1.25, 5.75, 0.5, 2.5);
+      person("pim", THIN, 0.4, 0, 5.5, { mode: "stand", expr: "whistle", facing: 1 }, 1, true, PIMS);
+      person("seek", VEC(2), -1.0, 0, 5.5, { mode: "stand", expr: f > W.gana - 6 ? "shock" : "stern", facing: f > W.gana - 6 ? 0 : -1 }, 3, true, 1.0);
+      if (f > W.gana - 4) fx("gana", 512, 200, textDraw("¡GANA!", "#8ae86a", 120), 0.0, 2.8, 5.5, 1.2, 0.47);
+      if (f < W.gana - 6) fx("cnt", 512, 200, textDraw("...8, 9, 10", "#ffffff", 80), -1.0, 2.5, 5.5, 1.0, 0.4);
+    }
+    if (id === S.mac) {
+      person("abu", ABUELA, -1.0, 0, 3.6, { mode: "stand", expr: "smile", facing: 1 }, 3, true, 0.95);
+      person("pim", THIN, 0.9, 0, 2.2, { mode: "stand", expr: f > W.come - 4 && f < W.uno2 ? "lick" : "smile", facing: 0 }, 1, true, PIMS);
+      const left = f > W.uno2 - 4;
+      for (let k = 0; k < 3; k++) fx(`mp${k}`, 256, 256, plateDraw(left ? 9 : 9), -0.6 + k * 0.6, 0.95, 3.1, 0.55, 0.55);
+      if (f > W.uno1 - 6) fx("mac", 256, 256, macDraw, 0.9, 1.3, 2.55, 0.3, 0.3);
+      if (false) fx("one", 1024, 256, textDraw("UN MACARRÓN", "#ffd23f", 120), 0.4, 2.7, 2.6, 1.4, 0.35);
+    }
+    if (id === S.key) {
+      const fall = smooth((f - W.cae + 4) / 14), into = smooth((f - W.rejilla + 4) / 12);
+      person("alc", ALCALDESA, GR[0] - 0.9, 0, GR[2] - 0.4, { mode: "stand", expr: f > W.cae - 2 ? "shock" : "grin", facing: 1, wave: f > W.cae - 2 ? 0.9 : 0.4 }, 3, true, 1.0);
+      if (into < 1) fx("key", 512, 192, keyDraw, GR[0] - 0.4 + 0.4 * fall, 1.3 - 1.2 * fall - 0.6 * into, GR[2], 0.6, 0.22);
+      if (f > W.rejilla) fx("plink", 512, 200, textDraw("¡PLINC!", "#ffd23f", 100), GR[0] + 0.2, 1.4, GR[2] + 0.4, 1.0, 0.4);
+    }
+    if (id === S.nobody) {
+      const kid = f < W.gato1 - 4, cat1 = f >= W.gato1 - 4 && f < W.gato2 - 6;
+      if (kid) person("kid", KIDV(1), GR[0], 0, GR[2] + 0.1, { mode: "stand", expr: "pained", facing: 0, tilt: Math.sin(t * 10) * 0.1 }, 3, true, 0.8);
+      if (cat1) card("cat1", GR[0], GR[2], 0.42, catDraw(0, "sit", false, "#e8a24a"), 1, 0);
+      if (!kid && !cat1) card("cat2", GR[0], GR[2], 0.42, catDraw(0, "sit", false, "#9a9aa2"), 1, 0);
+      for (let j = 0; j < 4; j++) person(`w${j}`, VEC(j + 3), GR[0] - 2.2 + j * 1.45 + (j > 1 ? 1.4 : 0), 0, GR[2] - 1.6, { mode: "stand", expr: "nervous", facing: 0 }, 10 + j, true, 1.0);
+      if (f > W.nadie - 4 && kid) fx("no1", 512, 200, textDraw("NO CABE", "#ff3b3b", 110), GR[0], 2.2, GR[2] + 0.4, 1.1, 0.43);
+    }
+    if (id === S.slip) {
+      const turn = f > W.lado2 - 6, sink = smooth((f - W.cuela + 2) / 24);
+      person("pim", THIN, GR[0], -2.4 * sink, GR[2], { mode: "stand", expr: sink > 0 ? "grin" : "smile", facing: turn ? 1 : 0 }, 1, sink === 0, PIMS);
+      for (let j = 0; j < 4; j++) person(`w${j}`, VEC(j + 3), GR[0] - 2.2 + j * 1.45 + (j > 1 ? 1.4 : 0), 0, GR[2] - 1.6, { mode: "stand", expr: sink > 0.5 ? "shock" : "nervous", facing: 0 }, 10 + j, true, 1.0);
+      if (f > W.carta - 4) fx("post", 1024, 256, textDraw("¡COMO UNA CARTA!", "#ffd23f", 110), GR[0], 2.6, GR[2], 2.0, 0.5);
+    }
+    if (id === S.out) {
+      const up = smooth((f - (W.sale - 12)) / 18);
+      person("pim", THIN, GR[0], -2.4 * (1 - up), GR[2], { mode: "stand", expr: "laugh", facing: 0, wave: 0.95 }, 1, up >= 1, PIMS);
+      if (f > W.llave2 - 4) fx("key2", 512, 192, keyDraw, GR[0] + 0.45, 2.3 - 2.4 * (1 - up), GR[2] + 0.2, 0.55, 0.2);
+      if (f > W.calcetin - 4) fx("sock", 256, 256, sockDraw, GR[0] - 0.55, 1.4, GR[2] + 0.25, 0.4, 0.4);
+      if (f > W.rana - 4) fx("frog", 256, 256, frogDraw, GR[0], 2.15 + Math.abs(Math.sin(t * 6)) * 0.08, GR[2] + 0.05, 0.36, 0.36);
+      for (let j = 0; j < 4; j++) person(`w${j}`, VEC(j + 3), GR[0] - 2.2 + j * 1.45 + (j > 1 ? 1.4 : 0), 0, GR[2] - 1.6, { mode: "stand", expr: "laugh", facing: 0, wave: f > W.llave2 ? 0.7 : undefined }, 10 + j, true, 1.0);
+      if (f > W.llave2) fx(`conf|${ph}`, 512, 512, confDraw(ph), GR[0], 4 - ((t * 1.5) % 1.5), GR[2] + 0.5, 7, 7, true);
+      if (false) fx("20", 1024, 256, textDraw("(DE HACE 20 AÑOS)", "#ffffff", 80), GR[0] - 0.4, 0.9, GR[2] + 0.6, 1.6, 0.4);
+    }
+    if (id === S.cta) { person("pim", THIN, 0, 0, 1.0, { mode: "stand", expr: "smile", facing: 0, wave: 0.9 }, 1, true, PIMS); const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), 0, 3.0, 0.5, 2.2, 1.1); }
+    void THREE;
   }
 }
