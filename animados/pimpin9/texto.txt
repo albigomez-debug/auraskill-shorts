@@ -1,6 +1,5 @@
 {+36% +10Hz} Pimpín ha estornudado... y ha despeinado a todo el pueblo.
 {+34% +8Hz} En este pueblo nadie es alérgico a nada... nadie menos Pimpín.
-{+30% +12Hz} Ja, ja, ja.
 {+28% +6Hz} Pimpín es alérgico a las flores, al polvo, a los gatos... y a los lunes. Y cuando estornuda, no estornuda. Despega.
 {+24%} Una vez estornudó en la panadería y llovió harina tres días.
 {+20% -2Hz} Pero un día se para el molino del pueblo. No hay viento. Ni una brisa. Sin molino no hay harina, y sin harina... no hay pan.

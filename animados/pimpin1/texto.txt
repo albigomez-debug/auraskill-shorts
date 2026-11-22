@@ -1,5 +1,4 @@
 {+34% +8Hz} En este pueblo todos se van de fiesta... todos menos Pimpín.
-{+30% +12Hz} Ja, ja, ja.
 Pimpín trabaja en la hamburguesería. Hace las hamburguesas, envuelve las hamburguesas y mete las patatas en la bolsa.
 {+28% +6Hz} Bueno... las lanza desde lejos. Uy, casi.
 {+26%} En este pueblo hacen fiesta por cualquier cosa. Un cumpleaños. Un martes. Una vez porque alguien se encontró una piedra bonita. Y otra porque el alcalde estornudó tres veces seguidas.

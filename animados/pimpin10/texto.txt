@@ -1,6 +1,5 @@
 {+36% +10Hz} Pimpín se ha tropezado... con una sombra.
 {+34% +8Hz} En este pueblo todos andan derechitos... todos menos Pimpín.
-{+30% +12Hz} Ja, ja, ja.
 {+28% +6Hz} Pimpín es el más patoso del mundo. Se tropieza subiendo escaleras. Y bajándolas. Y en el suelo liso, porque sí.
 {+24%} En la tienda de jarrones tiene una foto en la puerta. Prohibido pasar.
 {+20% -2Hz} Un día, un ladrón roba el queso de oro del pueblo y sale corriendo por la plaza.

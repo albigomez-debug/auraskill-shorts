@@ -1,6 +1,5 @@
 {+36% +10Hz} Pimpín acaba de dar la vuelta al pueblo... diez veces. Mientras tú leías esto.
 {+34% +8Hz} En este pueblo todos van despacito... todos menos Pimpín.
-{+30% +12Hz} Ja, ja, ja.
 {+28% +6Hz} Pimpín es tan rápido que llega a los sitios antes de salir de casa. Se ducha y la toalla ni se moja. Juega al escondite... y se encuentra a sí mismo.
 {+24%} Por eso en el pueblo nadie quiere hacer carreras con él. Ni el perro.
 {+20% -2Hz} Un día, en el cumpleaños de la alcaldesa, a alguien se le escapa la tarta... desde el balcón del tercer piso.
