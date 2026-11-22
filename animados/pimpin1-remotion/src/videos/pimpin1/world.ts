@@ -1,91 +1,80 @@
-// Pimpín 1 · "La llave de oro": Villazanca square (x=0), the town gate (GATE), the tunnel inside the wall (TUN).
+// Pimpín 1 · "Todos de fiesta": the party square (x = 0) and the burger bar at BUR (open towards +z).
 import * as THREE from "three";
-import { Pen } from "./toon";
+import { Pen, Outfit, SKINS } from "./toon";
 import { Base, Api, lam, lamC, box } from "./base";
 import { rep, planksHD } from "./paint";
-import { burstDraw } from "./beasts";
-import { textDraw, labelDraw, ctaDraw, bubbleDraw, flatGround } from "./props";
-import { villazanca, tallHouse, TALL, PIM, PIMPIN, ALCALDESA, VEC, mouseDraw, keyDraw, webDraw } from "./villa";
-import { S, W, GATE, TUN, keyY, pimRun, doorA, smooth } from "./story";
+import { textDraw, labelDraw, ctaDraw, signDraw, bubbleDraw } from "./props";
+import { villazanca, PIMPIN, VEC } from "./villa";
+import { S, W, BUR, night, fryArc, queueN, smooth } from "./story";
 
-const confDraw = (k: number) => (p: Pen) => { const c = ["#e2453c", "#f2c84a", "#3a8ac8", "#5ab85a", "#c85ab8"]; for (let j = 0; j < 40; j++) { const x = (j * 97 + k * 31) % 512, y = (j * 61 + k * 47) % 512; p.g.fillStyle = c[j % 5]; p.g.fillRect(x, y, 14, 22); } };
-const holeDraw = (p: Pen) => { p.ell(128, 160, 110, 90, "#120c0a", 6); p.poly([[18, 250], [238, 250], [238, 256], [18, 256]], "#120c0a", 0); };
+export const PIMS = 1.15;
+const ALCALDE: Outfit = { jacket: "#2a2a3a", pants: "#2a2a3a", boots: "#111", hat: "tophat", skin: SKINS[1], moustache: "#5a3a1a", belt: null, sash: "#c8202a", buttons: "#e8c45a", build: "stout" };
+const burgerDraw = (p: Pen) => { p.ell(128, 90, 100, 60, "#e8a24a", 7); p.poly([[30, 120], [226, 120], [226, 150], [30, 150]], "#6a3a1a", 6); p.band([[24, 160], [80, 172], [140, 158], [232, 170]], "#6ab83a", 16, 0); p.poly([[34, 176], [222, 176], [210, 210], [46, 210]], "#e8a24a", 7); p.poly([[40, 112], [216, 112], [200, 128], [60, 130]], "#f2c84a", 0); };
+const friesDraw = (p: Pen) => { for (let k = 0; k < 7; k++) p.poly([[70 + k * 18, 40 + (k % 3) * 14], [82 + k * 18, 40 + (k % 3) * 14], [86 + k * 16, 140], [72 + k * 16, 140]], "#f6d04a", 4); p.poly([[60, 120], [196, 120], [176, 240], [80, 240]], "#d8302a", 7); p.g.fillStyle = "#f6d04a"; p.g.font = "bold 50px Arial"; p.g.textAlign = "center"; p.g.fillText("P", 128, 200); };
+const stickDraw = (p: Pen) => { for (let k = 0; k < 5; k++) p.poly([[40 + k * 30, 30 + (k % 2) * 20], [58 + k * 30, 30 + (k % 2) * 20], [64 + k * 28, 220], [46 + k * 28, 220]], "#f6d04a", 4); };
+const bagDraw = (p: Pen) => { p.poly([[40, 70], [216, 70], [226, 250], [30, 250]], "#c89a5a", 7); p.poly([[40, 70], [216, 70], [200, 40], [56, 40]], "#a87a3a", 5); };
+const stoneDraw = (p: Pen) => { p.poly([[50, 160], [80, 80], [170, 60], [220, 140], [180, 210], [80, 210]], "#8a9ab0", 7); p.poly([[90, 100], [130, 86], [120, 120]], "#d8e4f4", 0); for (const [x, y] of [[40, 50], [220, 40], [230, 200]]) p.poly([[x, y - 26], [x + 7, y - 7], [x + 26, y], [x + 7, y + 7], [x, y + 26], [x - 7, y + 7], [x - 26, y], [x - 7, y - 7]], "#fff27a", 3); };
+const cakeDraw = (p: Pen) => { p.poly([[40, 130], [216, 130], [216, 240], [40, 240]], "#f4d8e8", 7); p.band([[40, 150], [128, 170], [216, 150]], "#e84a6a", 14, 0); for (let k = 0; k < 4; k++) { const x = 70 + k * 38; p.poly([[x, 70], [x + 10, 70], [x + 10, 130], [x, 130]], "#8ac8f0", 4); p.ell(x + 5, 56, 8, 14, "#ffb030", 3); } };
+const crownDraw = (p: Pen) => p.poly([[20, 200], [20, 60], [70, 130], [128, 40], [186, 130], [236, 60], [236, 200]], "#f2c84a", 8);
+const confDraw = (k: number) => (p: Pen) => { const c = ["#e2453c", "#f2c84a", "#3a8ac8", "#5ab85a", "#c85ab8"]; for (let j = 0; j < 36; j++) { p.g.fillStyle = c[j % 5]; p.g.fillRect((j * 97 + k * 31) % 512, (j * 61 + k * 47) % 512, 12, 20); } };
 
 export class World extends Base {
-  doorL = new THREE.Group(); doorR = new THREE.Group();
   constructor() {
     super();
     const R = this.root;
     villazanca(R);
-    { const w2 = lam({ map: rep(planksHD(), 1, 1), color: "#a8603a" }); box(R, 1.3, 0.14, 1.2, w2, 6.0, 1.75, -6.4); for (const [dx, dz] of [[-0.55, -0.5], [0.55, -0.5], [-0.55, 0.5], [0.55, 0.5]]) box(R, 0.12, 1.75, 0.12, w2, 6.0 + dx, 0.87, -6.4 + dz); box(R, 1.3, 1.6, 0.12, w2, 6.0, 2.6, -7.0); }
-    // the town wall and its great gate at GATE (wall along x, face at z = GATE[2])
-    const G0 = GATE[0], gz = GATE[2], stone = lam({ map: rep(planksHD(), 8, 3), color: "#b8a890" });
-    box(R, 16, 10, 2, stone, G0 - 11, 5, gz - 1); box(R, 16, 10, 2, stone, G0 + 11, 5, gz - 1); box(R, 6.4, 2.5, 2, stone, G0, 8.75, gz - 1);
-    for (let k = 0; k < 12; k++) box(R, 1.2, 1.0, 2, stone, G0 - 18 + k * 3.3, 10.5, gz - 1);
-    flatGround(R, 44, 18, "#c8b896", G0, gz + 7, 0.01);
-    const wood = lam({ map: rep(planksHD(), 1, 3), color: "#8a5a32" });
-    this.doorL.position.set(G0 - 3, 0, gz); this.doorR.position.set(G0 + 3, 0, gz); R.add(this.doorL, this.doorR);
-    box(this.doorL, 3, 7.5, 0.3, wood, 1.5, 3.75, 0); box(this.doorR, 3, 7.5, 0.3, wood, -1.5, 3.75, 0);
-    tallHouse(R, G0 - 14, gz + 12, 5.4, "#e8c890", "#a8402a", -1); tallHouse(R, G0 + 14, gz + 12, 5.4, "#c8d8b0", "#5a4a52", -1);
-    // tunnel inside the wall: dark stone corridor along x, 1.6 m high
-    const T0 = TUN[0], dark = lamC("#4a3e36");
-    box(R, 30, 0.2, 3, dark, T0, -0.1 + 0.01, 0); box(R, 30, 0.3, 3, dark, T0, 1.75, 0); box(R, 30, 1.8, 0.3, lamC("#5a4a40"), T0, 0.9, -1.4);
-    for (let k = 0; k < 10; k++) box(R, 0.4, 1.8, 0.4, lamC("#3a302a"), T0 - 14 + k * 3.2, 0.9, -1.2);
+    const B = BUR[0], tile = lamC("#f4f1ea"), red = lamC("#d8302a");
+    box(R, 10, 0.1, 7, tile, B, -0.03, -0.5); box(R, 10, 4.2, 0.3, red, B, 2.1, -3.8); box(R, 0.3, 4.2, 7, red, B - 5, 2.1, -0.5); box(R, 0.3, 4.2, 7, red, B + 5, 2.1, -0.5); box(R, 10.6, 0.4, 7.4, lamC("#f2c84a"), B, 4.3, -0.5);
+    box(R, 7, 0.8, 0.8, lam({ map: rep(planksHD(), 3, 1), color: "#e8c890" }), B, 0.4, 0.7); box(R, 7.1, 0.08, 0.9, lamC("#d8302a"), B, 0.82, 0.7);
+    box(R, 2.2, 0.9, 1.0, lamC("#5a5a62"), B - 1.8, 0.45, -2.6); box(R, 2.0, 0.04, 0.9, lamC("#1a1a1e"), B - 1.8, 0.92, -2.6);
+    box(R, 1.4, 1.0, 1.0, lamC("#8a8e96"), B + 2.4, 0.5, -2.6); box(R, 1.2, 0.04, 0.8, lamC("#e8b04a"), B + 2.4, 1.0, -2.6);
+    box(R, 30, 0.1, 30, lamC("#c8b896"), B, -0.05, 14);
   }
   pose(a: Api) {
-    const { f, t, id, person, card, fx } = a;
-    const da = doorA(f); this.doorL.rotation.y = -da; this.doorR.rotation.y = da;
-    const crowd = (n: number, x0: number, z0: number, expr: "grin" | "laugh" | "shock" | "neutral" | "nervous", wave = false) => { for (let k = 0; k < n; k++) person(`v${k}`, VEC(k), x0 - 5 + (k % 7) * 1.6 + (Math.floor(k / 7) % 2) * 0.8, 0, z0 - Math.floor(k / 7) * 1.4, { mode: "stand", expr, facing: 0, wave: wave ? 0.6 + Math.sin(t * 6 + k) * 0.3 : undefined }, 10 + k, true, TALL); };
-    if (id === S.hook || id === S.end) {
-      crowd(14, 0, -1.0, "neutral");
-      person("pim", PIMPIN, 0.3, 0, 1.2, { mode: "stand", expr: "smile", facing: 0, wave: 0.8 }, 1, true, PIM);
+    const { f, t, id, person, fx } = a;
+    const nk = night(f, id); if (nk > 0) { this.sun.intensity *= 1 - 0.75 * nk; this.hemi.intensity *= 1 - 0.5 * nk; const dk = new THREE.Color("#141a3a"); for (const u of ["c0", "c1", "c2", "c3", "c4"]) (this.skyMat.uniforms[u].value as THREE.Color).lerp(dk, 0.9 * nk); }
+    const B = BUR[0], ph = Math.floor(t * 8) % 4;
+    const party = id === S.hook || id === S.reasons || id === S.end;
+    if (party || id === S.night) {
+      for (let j = 0; j < 12; j++) { const x = -6 + (j % 6) * 2.2 + Math.floor(j / 6) * 1.1, z = -1 + Math.floor(j / 6) * 2.2; const dance = party; person(`v${j}`, VEC(j), x, dance ? Math.abs(Math.sin(t * 6 + j)) * 0.15 : 0, z, { mode: id === S.night && f > W.hambre - 4 ? "march" : "stand", phase: t * 2 + j, expr: id === S.night ? "nervous" : "laugh", facing: id === S.night && f > W.hambre - 4 ? 1 : 0, wave: dance ? 0.5 + Math.sin(t * 7 + j) * 0.45 : undefined, tilt: dance ? Math.sin(t * 5 + j) * 0.12 : 0 }, 10 + j, true, 1.0); }
+      if (party) fx(`conf|${ph}`, 512, 512, confDraw(ph), 0, 4.5 - ((t * 1.5) % 1.5), 1.5, 9, 9, true);
     }
-    if (id === S.intro) {
-      const x = 3;
-      person("pim", PIMPIN, x - 0.4, 0, -7.6, { mode: "stand", expr: f > W.metro - 4 ? "nervous" : "neutral", facing: 0, wave: 0.95 }, 1, true, PIM);
-      if (f > W.pimpin - 4) fx("name", 512, 160, labelDraw("PIMPÍN", "#e2453c"), x - 0.4, 2.15, -7.5, 0.7, 0.22);
-      if (f > W.metro - 4) fx("m", 512, 200, textDraw("1,20 m", "#ffd23f", 110), x - 0.4, 1.8, -7.4, 0.7, 0.27);
-      fx("kn", 128, 128, (p: Pen) => p.ell(64, 64, 40, 40, "#e8c45a", 6), x + 0.5, 2.4, -7.95, 0.18, 0.18);
+    if (id === S.reasons) {
+      if (f > W.cumple - 6 && f < W.martes - 4) fx("cake", 256, 256, cakeDraw, -1.5, 1.9, 0.6, 1.0, 1.0);
+      if (f > W.martes - 6 && f < W.piedra - 20) fx("mar", 1024, 512, signDraw(["¡ES MARTES!"], "#f2e2b8", "#c8202a"), 0.5, 3.5, 0.4, 2.6, 1.3);
+      if (f > W.piedra - 30 && f < W.alcalde - 4) fx("stone", 256, 256, stoneDraw, 1.2, 2.3, 1.2, 0.7, 0.7);
+      if (f > W.alcalde - 6) { person("alc", ALCALDE, 0.2, 0, 2.2, { mode: "stand", expr: f > W.ach1 - 4 ? "shock" : "grin", facing: 0, tilt: [W.ach1, W.ach2, W.ach3].some((g) => f > g - 2 && f < g + 6) ? -0.15 : 0 }, 3, true, 1.0); [W.ach1, W.ach2, W.ach3].forEach((g, k) => { if (f > g - 2) fx(`ach${k}`, 512, 200, textDraw("¡ACHÍS!", "#ffffff", 90), 0.2 + (k - 1) * 0.8, 2.6 + k * 0.45, 2.4, 0.9, 0.35); }); }
     }
-    if (id === S.abajo) {
-      person("g1", VEC(0), -0.6, 0, 0.0, { mode: "stand", expr: "grin", facing: 1, tilt: 0.12 }, 2, true, TALL);
-      person("g2", VEC(3), 1.6, 0, -0.4, { mode: "stand", expr: "laugh", facing: -1, tilt: -0.1 }, 3, true, TALL);
-      person("pim", PIMPIN, 0.5, 0, 0.6, { mode: "stand", expr: "nervous", facing: 0 }, 1, true, PIM);
-      fx("bub", 512, 256, bubbleDraw("¿AHÍ ABAJO?"), 0.4, 3.9, 0.2, 1.4, 0.7);
-    }
-    const G0 = GATE[0], gz = GATE[2];
-    if (id === S.fiesta || id === S.drop || id === S.crouch || id === S.out || id === S.open) {
-      const shock = id === S.drop || id === S.crouch;
-      if (id !== S.out) crowd(14, id === S.open ? G0 : G0 + 6.5, id === S.open ? gz + 7 : gz + 5, id === S.open ? "laugh" : shock ? "shock" : "grin", id === S.fiesta || id === S.open);
-      person("alc", ALCALDESA, G0 - 1.2, 0, gz + 2.2, { mode: id === S.crouch ? "sit" : "stand", expr: shock ? "shock" : id === S.out ? "relief_open" : "grin", facing: 0, wave: id === S.fiesta || id === S.open ? 0.95 : undefined }, 2, true, TALL);
-      fx("hole", 256, 256, holeDraw, G0 + 4.6, 0.32, gz + 0.02, 0.7, 0.7);
-      if (id === S.fiesta || (id === S.drop && f < W.cae)) fx("key", 512, 192, keyDraw, G0 - 0.5, 3.7, gz + 2.6, 1.0, 0.37);
-      if (id === S.drop && f >= W.cae && f < 515) { const [kx, ky] = keyY(f); fx(`key|${Math.round(f / 3) % 4}`, 512, 192, (p: Pen) => { p.g.translate(256, 96); p.g.rotate(f * 0.4); p.g.translate(-256, -96); keyDraw(p); }, G0 - 0.6 + kx, ky, gz + 2.0 - kx * 0.3, 0.5, 0.19); }
-      if (id === S.crouch) for (let k = 0; k < 2; k++) person(`c${k}`, VEC(k + 4), G0 + 3.4 + k * 2.2, 0, gz + 1.0, { mode: "sit", expr: "nervous", facing: -1 }, 4 + k, true, TALL);
-      if (id === S.out) {
-        person("pim", PIMPIN, G0 + 4.6 + pimRun(f), 0, gz + 0.6, { mode: "march", phase: t * 3, expr: "laugh", facing: 1, wave: 0.95 }, 1, true, PIM);
-        fx("k2", 512, 192, keyDraw, G0 + 4.9 + pimRun(f), 1.45, gz + 0.8, 0.5, 0.19);
-        for (let k = 0; k < 6; k++) person(`v${k}`, VEC(k), G0 + 1 + k * 1.5, 0, gz + 4 + (k % 2), { mode: "stand", expr: "shock", facing: 0, wave: 0.9 }, 10 + k, true, TALL);
-        if (f > W.llave2 - 4) fx("ok", 512, 200, textDraw("¡LA LLAVE!", "#ffd23f", 96), G0 + 5.2 + pimRun(f), 2.0, gz + 0.8, 1.1, 0.43);
+    if (id === S.hookB || id === S.work || id === S.fries || id === S.rush || id === S.honor) {
+      const sad = id === S.hookB || id === S.fries;
+      const px = id === S.honor ? B : B - 0.8, py = id === S.honor ? 0.0 : 0.3;
+      person("pim", PIMPIN, px, py, id === S.honor ? 2.5 : -0.2, { mode: "stand", expr: sad ? "nervous" : id === S.honor ? "laugh" : id === S.rush ? "grin" : f > W.casi - 4 && f < W.casi + 20 ? "shock" : "stern", facing: 0, wave: id === S.rush || id === S.honor || (id === S.work && f > W.lanza - 4) ? 0.95 : undefined }, 1, true, PIMS);
+      fx("sign", 1024, 512, signDraw(["HAMBURGUESAS"], "#f2c84a", "#c8202a"), B, 3.5, -3.6, 3.2, 1.6);
+      if (id === S.hookB) fx("ja", 512, 200, textDraw("¡JA, JA, JA!", "#ffd23f", 80), B + 0.8, 2.4, 0.2, 1.3, 0.5);
+      if (id === S.work) {
+        if (f > W.hace - 6 && f < W.envuelve) fx("bur", 256, 256, burgerDraw, B - 1.6, 1.15 + Math.abs(Math.sin((f - W.hace) * 0.25)) * 0.5, -2.4, 0.45, 0.45);
+        if (f > W.envuelve - 6 && f < W.patatas) fx("wrap", 256, 256, (p: Pen) => { p.poly([[30, 60], [226, 60], [226, 200], [30, 200]], "#f4f1ea", 7); p.g.fillStyle = "#c8202a"; p.g.font = "bold 40px Arial"; p.g.textAlign = "center"; p.g.fillText("¡ÑAM!", 128, 145); }, B - 0.3, 1.25, 0.6, 0.45, 0.45);
+        fx("bag", 256, 256, bagDraw, B + 1.5, 1.1, 0.7, 0.5, 0.5);
+        const fa = fryArc(f, W.lanza, B - 0.5, B + 1.5 + (f > W.casi - 20 ? 0.9 : 0)); if (fa) fx("fly", 256, 256, stickDraw, fa[0], fa[1], 0.6, 0.45, 0.45);
+        if (f > W.casi - 4) { fx("uy", 512, 200, textDraw("¡UY, CASI!", "#ff6a3a", 90), B + 0.5, 2.6, 0.8, 1.3, 0.5); fx("floor", 256, 256, stickDraw, B + 2.4, 0.25, 1.3, 0.45, 0.45); }
       }
-      if (id === S.open) {
-        const sh = f > W.hombros - 6;
-        person("car", VEC(1), G0 + 0.4, 0, gz + 3.2, { mode: "stand", expr: "laugh", facing: 0, wave: 0.95 }, 3, true, TALL);
-        person("pim", PIMPIN, G0 + 0.4, sh ? 2.15 : 0, gz + (sh ? 3.35 : 3.9), { mode: "stand", expr: "laugh", facing: 0, wave: 0.95 }, 1, true, PIM);
-        if (f > W.abre + 6) fx(`conf|${Math.floor(t * 8) % 4}`, 512, 512, confDraw(Math.floor(t * 8) % 4), G0, 5 - ((t * 2) % 2), gz + 1.5, 6, 6, true);
+      if (id === S.rush) {
+        const n = queueN(f); for (let j = 0; j < 9; j++) if (2.4 + j * 1.3 < a.cam.position.z - 2.5) person(`q${j}`, VEC(j), B + 0.6 + (j % 2) * 0.5, 0, 2.4 + j * 1.3, { mode: "stand", expr: j < n ? "laugh" : "nervous", facing: 0, wave: j < n ? 0.9 : undefined }, 10 + j, true, 1.0);
+        const stack = Math.min(12, Math.floor((f - W.mil + 6) / 4)); for (let k = 0; k < stack; k++) fx(`st${k}`, 256, 256, burgerDraw, B - 2.0, 1.0 + k * 0.17, 0.7, 0.4, 0.4);
+        for (let k = 0; k < 3; k++) { const fa = fryArc(f, W.lanzando + k * 9, B - 0.5, B + 1.5, 12); if (fa) fx(`fl${k}`, 256, 256, stickDraw, fa[0], fa[1], 0.6, 0.45, 0.45); }
+        fx("bag", 256, 256, bagDraw, B + 1.5, 1.1, 0.7, 0.5, 0.5);
+        if (f > W.falla - 4) fx("ok", 512, 200, textDraw("¡NI UNA!", "#8ae86a", 100), B + 0.5, 2.6, 0.9, 1.2, 0.47);
+        fx("open", 1024, 512, signDraw(["ABIERTO"], "#1a1a2a", "#8ae86a"), B - 3.4, 2.6, -3.6, 1.8, 0.9);
+      }
+      if (id === S.honor) {
+        for (let j = 0; j < 8; j++) person(`h${j}`, VEC(j), B + (j % 2 ? 1 : -1) * (1.0 + Math.floor(j / 2) * 0.8), 0, 1.6 - (j % 3) * 0.3, { mode: "stand", expr: "laugh", facing: 0, wave: 0.5 + Math.sin(t * 7 + j) * 0.45, tilt: Math.sin(t * 5 + j) * 0.12 }, 10 + j, true, 1.0);
+        fx(`conf|${ph}`, 512, 512, confDraw(ph), B, 3.4 - ((t * 1.5) % 1.5), 2.6, 7, 7, true);
+        if (f > W.honor - 6) { fx("crown", 256, 256, crownDraw, B, 1.72, 2.55, 0.4, 0.4); fx("hl", 1024, 256, (p: Pen) => { p.poly([[10, 10], [1014, 10], [1014, 246], [10, 246]], "#e8c45a", 10); p.g.fillStyle = "#1a1010"; p.g.font = "bold 92px 'Arial Black', Arial"; p.g.textAlign = "center"; p.g.fillText("INVITADO DE HONOR", 512, 160); }, B, 2.75, 2.5, 1.7, 0.42); }
       }
     }
-    if (id === S.tunnel) {
-      const T0 = TUN[0], px = T0 + (f - W.espera) * 0.035;
-      person("pim", PIMPIN, px, 0, 0.3, { mode: f > W.raton - 4 ? "march" : "stroll", phase: t * (f > W.raton - 4 ? 3.2 : 1.6), expr: f > W.raton - 4 ? "shock" : "nervous", facing: 1 }, 1, true, PIM);
-      for (let k = 0; k < 5; k++) fx(`web${k}`, 256, 256, webDraw, T0 - 12 + k * 6, 1.5, -1.2, 1.2, 1.2);
-      if (f > W.raton - 4) card(`mouse|${Math.floor(t * 6) % 2}`, px - 2.0 + Math.min(0.6, (f - W.raton) * 0.02), 0.3, 1.0, (p: Pen) => { p.g.translate(744, 1000); p.g.scale(1.6, 1.6); mouseDraw(Math.floor(t * 6) % 2 / 2)(p); }, 1, 0);
-      fx("glow", 256, 256, (p: Pen) => p.ell(128, 128, 120, 120, "#fff3b0", 0), T0 + 13, 0.9, 0, 1.6, 1.6, true);
-    }
-    if (id === S.cta) {
-      person("pim", PIMPIN, 0, 0, 1.0, { mode: "stand", expr: "smile", facing: 0, wave: 0.9 }, 1, true, PIM);
-      const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), 0, 3.0, 0.5, 2.2, 1.1);
-    }
-    void burstDraw;
+    if (id === S.fries) { fx("fr", 256, 256, friesDraw, B + 0.6, 1.4, -1.2, 0.5, 0.5); fx("bub", 512, 256, bubbleDraw("¡TOC... TOC!"), B - 0.3, 2.6, -0.4, 1.0, 0.5); }
+    if (id === S.night && f > W.hambre - 4) for (let j = 0; j < 3; j++) fx(`gr${j}`, 512, 200, textDraw("GRRR", "#ffd23f", 90), -4 + j * 3.5, 2.3 + (j % 2) * 0.3, 0, 0.8, 0.31);
+    if (id === S.cta) { person("pim", PIMPIN, 0, 0, 1.0, { mode: "stand", expr: "smile", facing: 0, wave: 0.9 }, 1, true, PIMS); const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), 0, 3.0, 0.5, 2.2, 1.1); }
+    void labelDraw;
   }
 }
