@@ -177,7 +177,7 @@ put(sfx, ping(1800), 660, 0.3)
 put(sfx, bell(), 684, 0.4)
 put(sfx, groan(1.0), 705, 0.3)
 put(sfx, whoosh(0.5), 758, 0.35)
-put(sfx, wind(0.8), 805, 0.3)
+put(sfx, wind(1.0), 805, 0.3)
 put(sfx, boom(), 835, 0.7)
 put(sfx, rumble(1.2), 840, 0.5)
 put(sfx, whoosh(0.4), 858, 0.3)
@@ -223,7 +223,7 @@ while tt < DUR:
 # tension: music ducks during the disaster and swells back
 dk = np.ones(N)
 tsec = np.arange(N) / SR
-dk *= 1 - 0.75 * np.clip((tsec - 34.06666666666667) / 0.3, 0, 1) * np.clip((35.266666666666666 - tsec) / 0.6, 0, 1)
+dk *= 1 - 0.75 * np.clip((tsec - 33.67) / 0.3, 0, 1) * np.clip((35.27 - tsec) / 0.6, 0, 1)
 
 # ---------------- mix ----------------
 sr_v, v = wavfile.read("public/voz/voz.wav")
