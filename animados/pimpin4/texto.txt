@@ -1,11 +1,10 @@
-{+34% +8Hz} Un equipo de gigantes perdió contra el jugador más bajito del mundo.
-Final de baloncesto: Villazanca contra Villagigante. Y los de Villagigante miden ¡tres metros!
-{+26%} Villazanca va perdiendo. Los gigantes del otro equipo tapan todos los tiros. Nadie puede pasar.
-{+20% -2Hz} Queda un minuto. Y en el banquillo solo queda uno: Pimpín.
-{+28% +5Hz} Todos se ríen. ¿Ese? ¡Pero si no les llega ni a la rodilla!
-{+30% +6Hz} Exacto. Pimpín bota el balón tan bajo... que los gigantes ni lo ven. Pasa entre sus piernas. Uno. Dos. Tres.
-Pero espera, que queda un segundo, y Pimpín está debajo de la canasta. Demasiado bajito para tirar.
-{+24%} Así que su equipo lo levanta... y Pimpín la mete. ¡Canasta!
-{+20%} Villazanca gana. Y el más bajito del pueblo es el máximo anotador.
-{+26%} Un equipo de gigantes... perdió contra el jugador más bajito del mundo.
+{+34% +8Hz} En este pueblo todos miden dos metros... todos menos Pimpín.
+{+30% +12Hz} Ja, ja, ja.
+Pimpín mide un metro veinte. Para ver la tele se sube a una silla. Para dar un abrazo, abraza rodillas.
+{+28% +6Hz} En las fotos del pueblo solo se le ve la gorra. Y a veces, ni eso.
+{+24%} Pero hoy es la final de baloncesto contra el pueblo de al lado. Y los rivales miden ¡tres metros!
+{+20% -2Hz} Queda un minuto. Van perdiendo. Y en el banquillo solo queda uno.
+{+28% +5Hz} Todos se ríen. Pero Pimpín bota el balón tan bajo que los gigantes ni lo ven. Pasa entre sus piernas. Uno. Dos. Tres.
+{+30% +6Hz} Pero espera, que es demasiado bajito para tirar. Así que su equipo lo levanta... ¡y canasta!
+{+26%} Porque en este pueblo todos miden dos metros... todos menos Pimpín.
 {+28% +10Hz} Y si te ha gustado, dale like y suscríbete para más aventuras de Pimpín.
