@@ -1,17 +1,18 @@
-// Pimpín 5 · "Humo en la panadería": the square (bakery door at (-3, -8)) and the bakery interior at INT.
-import { Pen, Outfit, SKINS } from "./toon";
+// Pimpín 5 · "Miedica": the square (bakery door at (-3, -8)) and the bakery interior at INT.
+import { Pen } from "./toon";
 import { Base, Api, lam, lamC, box } from "./base";
 import { rep, planksHD } from "./paint";
-import { catDraw } from "./beasts";
-import { textDraw, labelDraw, ctaDraw, signDraw, fireDraw, smokeDraw, bubbleDraw } from "./props";
-import { villazanca, TALL, PIM, PIMPIN, HOGAZA, VEC } from "./villa";
+import { catDraw, pigeonDraw } from "./beasts";
+import { textDraw, labelDraw, ctaDraw, signDraw, fireDraw, smokeDraw, medalDraw } from "./props";
+import { villazanca, PIMPIN, HOGAZA, VEC } from "./villa";
 import { S, W, INT, smoke, pimIn, smooth } from "./story";
 
-const FIRE: Outfit = { jacket: "#c8302a", pants: "#2a2a30", boots: "#1a1a1a", hat: "cap", cap: "#e8c020", skin: SKINS[1], belt: "#e8c020", buttons: "#e8c020", moustache: "#3a2a1a" };
-const cakeDraw = (p: Pen) => { const t = [[60, 560, 452, 740, "#f4d8e8"], [110, 380, 402, 560, "#f8f4ec"], [160, 220, 352, 380, "#f4d8e8"]] as [number, number, number, number, string][]; for (const [a, b, c, d, col] of t) { p.poly([[a, b], [c, b], [c, d], [a, d]], col, 8); p.band([[a, b + 18], [(a + c) / 2, b + 40], [c, b + 18]], "#e84a6a", 16, 0); } for (let k = 0; k < 5; k++) { const x = 190 + k * 33; p.poly([[x, 150], [x + 12, 150], [x + 12, 220], [x, 220]], "#8ac8f0", 4); p.ell(x + 6, 132, 9, 16, "#ffb030", 3); } };
+export const PIMS = 1.1;
+const sockDraw = (p: Pen) => { p.poly([[90, 20], [170, 20], [170, 170], [220, 210], [200, 250], [100, 230], [90, 170]], "#f4f1ea", 7); for (let k = 0; k < 5; k++) p.poly([[90, 34 + k * 40], [170, 34 + k * 40], [170, 52 + k * 40], [90, 52 + k * 40]], k % 2 ? "#3a6ab8" : "#d8302a", 0); };
+const shadowDraw = (p: Pen) => { p.ell(128, 90, 60, 60, "rgba(20,10,30,0.85)", 0); p.ell(128, 260, 70, 110, "rgba(20,10,30,0.85)", 0); p.poly([[70, 360], [100, 360], [100, 500], [70, 500]], "rgba(20,10,30,0.85)", 0); p.poly([[156, 360], [186, 360], [186, 500], [156, 500]], "rgba(20,10,30,0.85)", 0); };
 const coughDraw = (p: Pen) => { p.g.fillStyle = "#f4f1ea"; p.g.strokeStyle = "#1a1010"; p.g.lineWidth = 10; p.g.font = "bold 90px 'Arial Black', Arial"; p.g.textAlign = "center"; p.g.strokeText("¡COF!", 256, 120); p.g.fillText("¡COF!", 256, 120); };
-const waterDraw = (k: number) => (p: Pen) => { for (let j = 0; j < 4; j++) p.band([[0, 128 + j * 8], [180, 100 + j * 6 + ((k + j) % 3) * 6], [400, 120 + j * 10], [512, 180 + j * 12]], j % 2 ? "#9ad4ff" : "#d8f0ff", 14 - j * 2, 0); };
 const arrowDraw = (txt: string, col: string, up = true) => (p: Pen) => { p.poly(up ? [[128, 10], [230, 120], [170, 120], [170, 300], [86, 300], [86, 120], [26, 120]] : [[86, 10], [170, 10], [170, 190], [230, 190], [128, 300], [26, 190], [86, 190]], col, 8); p.g.fillStyle = "#1a1010"; p.g.font = "bold 40px Arial"; p.g.textAlign = "center"; p.g.fillText(txt, 128, up ? 230 : 120); };
+
 
 export class World extends Base {
   constructor() {
@@ -28,35 +29,53 @@ export class World extends Base {
   pose(a: Api) {
     const { f, t, id, person, card, fx } = a;
     const k = smoke(f, id), ph = Math.floor(t * 4) % 4, I = INT[0];
-    const inside = id === S.hook || id === S.giants || id === S.cat || id === S.idea || id === S.fact || id === S.enter || id === S.end;
+    const crouch = (key: string, x: number, z: number, expr: any, facing: -1 | 0 | 1 = 0, walk = false) => person(key, PIMPIN, x, 0, z, { mode: "sit", phase: t * 3, expr, facing, look: Math.sin(t * 5) * 0.8, tilt: walk ? Math.sin(t * 10) * 0.05 : 0 }, 1, true, PIMS);
+    if (id === S.hook || id === S.ja || id === S.end) {
+      for (let j = 0; j < 8; j++) { const x = -3.0 + j * 0.85; if (Math.abs(x) < 0.5) continue; person(`v${j}`, VEC(j), x, 0, 1.4 + (j % 2) * 0.6, { mode: "stand", expr: id === S.ja ? "laugh" : "grin", facing: 0, wave: 0.6 + Math.sin(t * 5 + j) * 0.35 }, 10 + j, true, 1.0); }
+      crouch("pim", 0, 3.0, id === S.ja ? "shock" : "nervous");
+    }
+    if (id === S.fear) {
+      const jump = (g: number) => Math.max(0, 1 - Math.abs(f - g - 6) / 8);
+      const jy = Math.max(jump(W.palomas), jump(W.sombra), jump(W.rayas)) * 0.6;
+      person("pim", PIMPIN, 0, jy, 3.0, { mode: "stand", expr: jy > 0.05 ? "shock" : "nervous", facing: 0, wave: jy > 0.05 ? 0.95 : undefined }, 1, jy < 0.05, PIMS);
+      if (f > W.palomas - 6 && f < W.sombra - 4) for (let j = 0; j < 3; j++) card(`pg${j}`, -1.1 + j * 1.1, 3.6 + (j % 2) * 0.3, 0.28, pigeonDraw((t * 2 + j) % 1), 1, 0);
+      if (f > W.sombra - 4 && f < W.rayas - 6) { fx("sh", 256, 512, shadowDraw, 0.8, 0.9, 2.8, 0.9, 1.8); if (false) fx("shq", 1024, 256, textDraw("¡SU SOMBRA!", "#ffffff", 110), 0.2, 2.5, 3.0, 1.4, 0.35); }
+      if (f > W.rayas - 6) fx("sock", 256, 256, sockDraw, 0.9, 1.0, 3.3, 0.6, 0.6);
+    }
+    if (id === S.ninja) {
+      const x = -2 + smooth((f - 238) / 110) * 4;
+      crouch("pim", x, 3.0, "nervous", 1, true);
+      if (false) fx("nj", 1024, 256, textDraw("NINJA... ASUSTADO", "#ffd23f", 100), x, 2.0, 3.0, 1.8, 0.45);
+    }
+    const inside = id === S.cat || id === S.giants || id === S.fact || id === S.idea || id === S.enter;
     if (inside) {
-      // smoke layer: everything above ~1.6 m is grey
       for (let j = 0; j < 10; j++) for (const z of [1.8, -1.5]) fx(`sm${j}|${(ph + j) % 4}|${z}`, 256, 256, smokeDraw((ph + j) % 4), I - 4.5 + j, 2.9 - (j % 2) * 0.25, z + (j % 3) * 0.2, 2.6 * k + 0.01, 2.4 * k + 0.01, true);
       fx(`fire|${ph}`, 256, 256, fireDraw(ph % 3), I + 3.2, 1.1, -2.84, 1.0, 1.0);
-      if (!(id === S.hook || id === S.end || (id === S.enter && f > W.sale - 4))) card(`cat|${id === S.enter && f > W.migas2 - 4 ? 1 : 0}`, I - 1.6, -1.1, 0.42, catDraw(t * 2, "sit", false, "#9a9aa2"), 1, 0);
+      if (!(id === S.enter && f > W.sale - 4)) card(`cat|${id === S.enter && f > W.migas2 - 4 ? 1 : 0}`, I - 1.6, -1.1, 0.42, catDraw(t * 2, "sit", false, "#9a9aa2"), 1, 0);
       if (id === S.cat && f > W.migas - 4) fx("ml", 512, 160, labelDraw("MIGAS", "#7a5a3a"), I - 1.6, 1.25, -0.9, 0.6, 0.19);
-      if (id === S.cat) fx("miau", 512, 256, bubbleDraw("¡MIAU!"), I - 1.0, 1.55, -0.9, 0.7, 0.35);
     }
-    if (id === S.giants) for (let j = 0; j < 3; j++) { const x = I - 2 + j * 2; person(`v${j}`, VEC(j), x, 0, 0.6 + (j % 2) * 0.4, { mode: f > W.salir - 4 ? "march" : "stand", phase: t * 2, expr: "shock", facing: f > W.salir - 4 ? -1 : 0, wave: 0.9 }, 10 + j, true, TALL); if (f > W.tosen - 4) fx(`cof${j}`, 512, 256, coughDraw, x + 0.3, 1.45 - (j % 2) * 0.1, 1.2 + (j % 2) * 0.4, 0.8, 0.4); }
-    if (id === S.idea || id === S.fact || id === S.enter || id === S.hook || id === S.end) {
-      const px = id === S.enter ? pimIn(f) : id === S.hook || id === S.end ? I - 0.5 : I + 0.5, carry = (id === S.enter && f > W.sale - 4) || id === S.hook || id === S.end;
-      person("pim", PIMPIN, px, 0, 0.8, { mode: id === S.enter || id === S.hook || id === S.end ? "march" : "stand", phase: t * 2, expr: carry ? "laugh" : id === S.fact ? "grin" : "stern", facing: id === S.enter && f > W.sale - 4 ? 1 : 0 }, 1, true, PIM);
-      if (carry) card("catc", px + 0.15, 1.0, 0.32, catDraw(0, "sit", false, "#9a9aa2"), 1, 0, 0.35);
-    }
+    if (id === S.giants) for (let j = 0; j < 3; j++) { const x = I - 2 + j * 2; person(`v${j}`, VEC(j), x, 0, 0.6 + (j % 2) * 0.4, { mode: f > W.salen - 4 ? "march" : "stand", phase: t * 2, expr: f > W.salen - 4 ? "pained" : "stern", facing: f > W.salen - 4 ? -1 : 0, wave: f < W.salen - 4 ? 0.9 : undefined }, 10 + j, true, 1.0); if (f > W.tosiendo - 4) fx(`cof${j}`, 512, 256, coughDraw, x + 0.3, 1.9 - (j % 2) * 0.1, 1.2 + (j % 2) * 0.4, 0.8, 0.4); }
+    if (id === S.fact || id === S.idea) { crouch("pim", I + 0.5, 0.8, id === S.idea ? "grin" : "nervous"); }
     if (id === S.fact) { if (f > W.sube - 6) fx("up", 256, 320, arrowDraw("HUMO", "#e8e8f0"), I - 0.45, 2.1, 2.7, 0.6, 0.75); if (f > W.agachado - 6) fx("dn", 256, 320, arrowDraw("AIRE", "#8ae86a", false), I + 0.55, 0.7, 2.7, 0.5, 0.62); }
-    // the square
-    if (id === S.intro || id === S.out || id === S.cake) {
-      fx("sign", 1024, 512, signDraw(["PANADERÍA", "HOGAZA"], "#f2e2b8", "#8a3a1a"), -3, 4.6, -7.85, 2.2, 1.1);
-      const sm = id === S.intro ? smooth((f - W.humo + 10) / 20) : id === S.out ? 1 - smooth((f - W.apagan) / 40) : 0;
-      if (sm > 0.02) for (let j = 0; j < 5; j++) { const y = 2.5 + ((t * 0.8 + j * 0.5) % 2.5) * 1.6; fx(`ex${j}|${(ph + j) % 4}`, 256, 256, smokeDraw((ph + j) % 4), -3 + Math.sin(j * 2) * 1.2, y, -7.6, 2.4 * sm, 2.2 * sm, true); }
-      person("hog", HOGAZA, -0.6, 0, -4.5, { mode: "stand", expr: id === S.cake ? "laugh" : id === S.intro && f > W.humo - 4 ? "shock" : "smile", facing: -1, wave: id === S.cake && f > W.regala - 4 ? 0.95 : undefined }, 2, true, TALL);
-      if (id === S.intro && f > W.hogaza - 4 && f < W.humo) fx("hl", 512, 160, labelDraw("SRA. HOGAZA", "#8a3a1a"), -0.6, 4.25, -4.4, 1.1, 0.34);
-      for (let j = 0; j < 4; j++) person(`n${j}`, VEC(j + 3), 2.5 + j * 1.5, 0, -2.5 + (j % 2) * 1.2, { mode: "stand", expr: id === S.cake ? "laugh" : "shock", facing: -1, wave: id === S.cake ? 0.7 : undefined }, 12 + j, true, TALL);
-      if (id === S.out || id === S.cake) { person("pim", PIMPIN, 0.8, 0, -3.4, { mode: "stand", expr: "laugh", facing: -1, wave: id === S.cake ? 0.95 : undefined }, 1, true, PIM); card("catc", 0.95, -3.2, 0.32, catDraw(0, "sit", false, "#9a9aa2"), 1, 0, 0.35); }
-      if (id === S.out) for (let j = 0; j < 2; j++) { const x = -5.5 + j * 4.6; person(`fi${j}`, FIRE, x, 0, -4.8, { mode: "stand", expr: "stern", facing: j ? -1 : 1, wave: 0.6 }, 20 + j, true, TALL); if (f > W.bomberos + 10) fx(`wa${j}|${ph}`, 512, 256, waterDraw(ph), x + (j ? -1.1 : 1.1), 2.6, -6.0, 2.0, 1.0); }
-      if (id === S.cake && f > W.tarta - 6) fx("cake", 512, 768, cakeDraw, 2.0, 1.35 * smooth((f - W.tarta + 6) / 10) + 0.01, -2.0, 1.8 * smooth((f - W.tarta + 6) / 10) + 0.01, 2.7 * smooth((f - W.tarta + 6) / 10) + 0.01);
+    if (id === S.enter) {
+      const px = pimIn(f), carry = f > W.sale - 4;
+      crouch("pim", px, 0.8, carry ? "laugh" : "stern", carry ? 1 : -1, true);
+      if (carry) card("catc", px + 0.15, 1.0, 0.32, catDraw(0, "sit", false, "#9a9aa2"), 1, 0, 0.3);
     }
-    if (id === S.cta) { person("pim", PIMPIN, 0, 0, 1.0, { mode: "stand", expr: "smile", facing: 0, wave: 0.9 }, 1, true, PIM); const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), 0, 3.0, 0.5, 2.2, 1.1); }
-    void textDraw;
+    if (id === S.bake || id === S.medal) {
+      fx("sign", 1024, 512, signDraw(["PANADERÍA", "HOGAZA"], "#f2e2b8", "#8a3a1a"), -3, 4.6, -7.85, 2.2, 1.1);
+      const sm = id === S.bake ? smooth((f - W.humo + 10) / 20) : 0;
+      if (sm > 0.02) for (let j = 0; j < 5; j++) { const y = 2.5 + ((t * 0.8 + j * 0.5) % 2.5) * 1.6; fx(`ex${j}|${(ph + j) % 4}`, 256, 256, smokeDraw((ph + j) % 4), -3 + Math.sin(j * 2) * 1.2, y, -7.6, 2.4 * sm, 2.2 * sm, true); }
+      person("hog", HOGAZA, -0.6, 0, -4.5, { mode: "stand", expr: id === S.medal ? "laugh" : f > W.humo - 4 ? "shock" : "smile", facing: -1, wave: id === S.medal ? 0.6 : undefined }, 2, true, 1.0);
+      for (let j = 0; j < 4; j++) person(`n${j}`, VEC(j + 3), 2.5 + j * 1.5, 0, -2.5 + (j % 2) * 1.2, { mode: "stand", expr: id === S.medal ? "laugh" : "shock", facing: -1, wave: id === S.medal ? 0.7 : undefined }, 12 + j, true, 1.0);
+      if (id === S.medal) {
+        const run = smooth((f - W.corriendo + 4) / 30), px = 0.8 - run * 7;
+        person("pim", PIMPIN, px, 0, -2.4, { mode: run > 0 ? "march" : "stand", phase: t * 4, expr: run > 0 ? "shock" : "laugh", facing: run > 0 ? -1 : 0 }, 1, true, PIMS);
+        if (run < 0.05) card("catc", 1.3, -2.2, 0.32, catDraw(0, "sit", false, "#9a9aa2"), 1, 0);
+        if (f > W.medalla - 6) { const shine = 0.5 + 0.5 * Math.sin(t * 20); fx("med", 256, 384, medalDraw(""), px + 0.02, 0.8, -2.2, 0.24, 0.36); if (f > W.brilla - 30) fx(`gl|${shine > 0.5 ? 1 : 0}`, 256, 256, (p: Pen) => { for (let r = 0; r < 8; r++) { const a2 = (r / 8) * Math.PI * 2; p.band([[128, 128], [128 + Math.cos(a2) * (90 + shine * 30), 128 + Math.sin(a2) * (90 + shine * 30)]], "#fff27a", 10, 0); } }, px + 0.02, 0.75, -2.15, 0.8, 0.8); }
+        if (false) fx("bri", 512, 200, textDraw("¡BRILLA!", "#ffd23f", 120), 0.6, 2.6, -2.0, 1.2, 0.47);
+      }
+    }
+    if (id === S.cta) { person("pim", PIMPIN, 0, 0, 1.0, { mode: "stand", expr: "smile", facing: 0, wave: 0.9 }, 1, true, PIMS); const pr = smooth((f - W.dale) / 10); fx(`cta|${Math.round(pr * 6)}`, 1024, 512, ctaDraw(pr), 0, 3.0, 0.5, 2.2, 1.1); }
   }
 }

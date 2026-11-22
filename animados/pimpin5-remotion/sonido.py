@@ -10,7 +10,7 @@ from scipy.io import wavfile
 
 SR = 48000
 FPS = 30
-DUR = 1220 / FPS
+DUR = 1141 / FPS
 N = int(DUR * SR)
 rng = np.random.default_rng(7)
 
@@ -150,42 +150,37 @@ def knock():
     return norm(x)
 
 
-put(sfx, boom(), 0, 0.4)
-put(sfx, rumble(3.5), 0, 0.2)
-put(sfx, whoosh(0.8), 10, 0.35)
-put(sfx, ping(1800), 45, 0.4)
-put(sfx, whoosh(0.6), 104, 0.35)
-put(sfx, bell(), 110, 0.3)
-put(sfx, ping(2200), 163, 0.3)
-put(sfx, rumble(2.0), 222, 0.3)
-put(sfx, whoosh(0.6), 250, 0.35)
-put(sfx, knock(), 334, 0.35)
-put(sfx, knock(), 342, 0.35)
-put(sfx, knock(), 350, 0.35)
-put(sfx, groan(1.0), 360, 0.3)
-put(sfx, whoosh(0.5), 396, 0.3)
-put(sfx, ping(2600), 416, 0.4)
-put(sfx, whoosh(0.5), 461, 0.3)
-put(sfx, ping(1600), 498, 0.35)
-put(sfx, whoosh(0.6), 581, 0.35)
-put(sfx, ping(2000), 620, 0.35)
-put(sfx, bell(), 674, 0.35)
-put(sfx, whoosh(0.6), 730, 0.35)
-put(sfx, whoosh(0.4), 776, 0.3)
-put(sfx, ping(2600), 801, 0.4)
-put(sfx, whoosh(0.5), 831, 0.3)
-put(sfx, whoosh(0.6), 858, 0.35)
-put(sfx, bell(), 876, 0.4)
-put(sfx, wind(3.0), 890, 0.2)
-put(sfx, whoosh(0.5), 918, 0.3)
-put(sfx, boom(), 971, 0.4)
-put(sfx, bell(), 985, 0.35)
-put(sfx, whoosh(0.6), 1010, 0.35)
-put(sfx, boom(), 1014, 0.4)
-put(sfx, ping(1800), 1061, 0.4)
-put(sfx, whoosh(0.5), 1114, 0.3)
-put(sfx, ping(2000), 1146, 0.4)
-put(sfx, ping(2600), 1160, 0.4)
+put(sfx, boom(), 2, 0.5)
+put(sfx, whoosh(0.4), 64, 0.35)
+put(sfx, ping(880), 74, 0.25)
+put(sfx, ping(990), 83, 0.25)
+put(sfx, ping(1100), 93, 0.25)
+put(sfx, whoosh(0.4), 102, 0.3)
+put(sfx, screech(0.3), 155, 0.3)
+put(sfx, screech(0.3), 180, 0.3)
+put(sfx, screech(0.3), 212, 0.3)
+put(sfx, whoosh(0.4), 236, 0.3)
+put(sfx, ping(660), 321, 0.25)
+put(sfx, whoosh(0.5), 352, 0.35)
+put(sfx, rumble(1.5), 409, 0.4)
+put(sfx, wind(1.6), 434, 0.3)
+put(sfx, whoosh(0.4), 461, 0.3)
+put(sfx, ping(1320), 482, 0.25)
+put(sfx, whoosh(0.4), 508, 0.3)
+put(sfx, groan(0.8), 560, 0.35)
+put(sfx, whoosh(0.4), 597, 0.3)
+put(sfx, whoosh(0.6), 639, 0.3)
+put(sfx, ping(990), 683, 0.3)
+put(sfx, whoosh(0.4), 723, 0.3)
+put(sfx, whoosh(0.4), 782, 0.3)
+put(sfx, ping(1320), 810, 0.3)
+put(sfx, whoosh(0.4), 848, 0.3)
+put(sfx, bell(), 866, 0.4)
+put(sfx, whoosh(0.8), 904, 0.4)
+put(sfx, ping(1800), 939, 0.3)
+put(sfx, whoosh(0.4), 958, 0.3)
+put(sfx, boom(), 963, 0.45)
+put(sfx, whoosh(0.4), 1038, 0.3)
 
 # ---------------- music: light plucked loop (D minor), resolves to major at the end ----------------
 BPM = 112
@@ -212,7 +207,7 @@ tt = 0.0
 k = 0
 while tt < DUR:
     frame = tt * FPS
-    root, ch = end if frame >= 1118 else prog[k % 4]
+    root, ch = end if frame >= 1042 else prog[k % 4]
     put(mus, bass(note(root - 12), bar * 0.9), frame, 0.55)
     for b in range(8):
         m = ch[[0, 1, 2, 1, 0, 2, 1, 2][b]] + (12 if b in (3, 7) else 0)
@@ -222,7 +217,7 @@ while tt < DUR:
 # tension: music ducks during the disaster and swells back
 dk = np.ones(N)
 tsec = np.arange(N) / SR
-dk *= 1 - 0.75 * np.clip((tsec - 35.67) / 0.3, 0, 1) * np.clip((36.87 - tsec) / 0.6, 0, 1)
+dk *= 1 - 0.75 * np.clip((tsec - 33.13333333333333) / 0.3, 0, 1) * np.clip((34.333333333333336 - tsec) / 0.6, 0, 1)
 
 # ---------------- mix ----------------
 sr_v, v = wavfile.read("public/voz/voz.wav")
