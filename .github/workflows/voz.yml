@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       carpeta:
-        description: "Carpeta con texto.txt (p. ej. animados/melaza)"
+        description: "Carpeta(s) con texto.txt, separadas por espacios (p. ej. animados/melaza animados/oso)"
         required: true
       voz:
         description: "Voz de edge-tts"
@@ -31,11 +31,11 @@ jobs:
       - run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
           pip install edge-tts
-          python herramientas/voz.py "${{ github.event.inputs.carpeta }}" "${{ github.event.inputs.voz }}" "${{ github.event.inputs.velocidad }}"
+          for c in ${{ github.event.inputs.carpeta }}; do python herramientas/voz.py "$c" "${{ github.event.inputs.voz }}" "${{ github.event.inputs.velocidad }}"; done
       - run: |
           git config user.name "auraskill-bot"
           git config user.email "auraskill-bot@users.noreply.github.com"
-          git add "${{ github.event.inputs.carpeta }}"
+          git add ${{ github.event.inputs.carpeta }}
           git diff --cached --quiet && exit 0
           git commit -m "Voz generada"
           for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
